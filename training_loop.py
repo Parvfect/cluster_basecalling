@@ -13,10 +13,6 @@ from utils import get_actual_transcript, get_savepaths
 import torchaudio
 import datetime
 
-# Tensorboard
-from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter()
-
 device = torch.device("cuda:0")
 
 labels_int = np.arange(11).tolist()
@@ -97,8 +93,6 @@ for epoch in range(epochs):
             print(f"Actual Transcript: {actual_transcript}")
             print(f"Motif Error Rate: {motif_err}")
 
-            writer.add_scalar("Loss/train", loss, epoch)
-            writer.add_scalar("Err/Train", motif_err, epoch)
             """
             
         # Saving model weights
@@ -175,7 +169,6 @@ for epoch in range(epochs):
     val_loss /= len(X_val)
     val_accuracy = correct / total
     print(f"Epoch {epoch}, Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
-    writer.add_scalar("Loss/validation", val_loss, epoch)
 
 
 
