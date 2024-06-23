@@ -6,9 +6,11 @@ import numpy as np
 from sklearn.preprocessing import normalize
 from tqdm import tqdm
 import math
+import os
 
 def load_training_data():
-    dataset = pd.read_pickle(r"C:\Users\Parv\Doc\HelixWorks\Basecalling\code\synth_dataset.pkl")
+    dataset = pd.read_pickle(os.path.join(os.environ['HOME'], "synth_dataset.pkl"))
+    
     X = dataset['Squiggle'].to_numpy().tolist()
 
     y = dataset['Motifs'].to_numpy()

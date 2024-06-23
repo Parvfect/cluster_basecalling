@@ -9,7 +9,7 @@ import numpy as np
 from training_data import data_preproc
 from sklearn.model_selection import train_test_split
 from greedy_decoder import GreedyCTCDecoder
-from utils import get_actual_transcript, get_model_savepath
+from utils import get_actual_transcript, get_savepaths
 import torchaudio
 import datetime
 
@@ -23,7 +23,7 @@ labels_int = np.arange(11).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
 greedy_decoder = GreedyCTCDecoder(labels=labels)
 
-model_save_path = get_model_savepath()
+model_save_path, file_write_path = get_savepaths()
 model_save_iterations = 200
 
 # Model Parameters
@@ -81,6 +81,11 @@ for epoch in range(epochs):
         optimizer.step()
 
         if i % 100 == 0:
+
+            with open(file_write_path, 'a') as f:
+                f.write(f"\nEpoch {epoch} Batch {i} Loss {loss.item()} ")
+            
+            """
             print(f"\nEpoch {epoch} Batch {i}")
             print(f"Loss {loss.item()}")
             greedy_result = greedy_decoder(model_output_timestep)
@@ -94,7 +99,8 @@ for epoch in range(epochs):
 
             writer.add_scalar("Loss/train", loss, epoch)
             writer.add_scalar("Err/Train", motif_err, epoch)
-        
+            """
+            
         # Saving model weights
         if i % model_save_iterations == 0:
             torch.save({
