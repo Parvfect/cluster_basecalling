@@ -7,9 +7,15 @@ from sklearn.preprocessing import normalize
 from tqdm import tqdm
 import math
 import os
+import pickle
 
 def load_training_data():
-    dataset = pd.read_pickle(os.path.join(os.environ['HOME'], "synth_dataset.pkl"))
+
+    with open(os.path.join(os.environ['HOME'], "synth_dataset.pkl"), "rb") as fh:
+        dataset = pickle.load(fh)
+
+    print(type(dataset))
+    #dataset = pd.read_pickle()
     
     X = dataset['Squiggle'].to_numpy().tolist()
 
