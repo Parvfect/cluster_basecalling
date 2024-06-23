@@ -34,7 +34,6 @@ model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, d
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 ctc_loss = nn.CTCLoss()
 
-torch.set_default_device(device)
 X, y = data_preproc()
 
 # Creating Train, Test, Validation sets
