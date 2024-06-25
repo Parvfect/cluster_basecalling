@@ -6,7 +6,8 @@ def get_savepaths():
 
     uid = str(datetime.datetime.now()).replace(' ', '.').replace('-','').replace(':',"")
 
-    savepath = os.path.join(os.environ['HOME'], f"{uid}")
+    savepath = os.path.join(os.environ['HOME'], os.path.join("training_logs", f"{uid}"))
+    
     os.mkdir(savepath)
 
     model_savepath = os.path.join(savepath, "model.pth")
