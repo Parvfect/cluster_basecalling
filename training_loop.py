@@ -13,7 +13,7 @@ from utils import get_actual_transcript, get_savepaths
 import torchaudio
 import datetime
 
-device = torch.device("cuda:0")
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 labels_int = np.arange(11).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
