@@ -11,9 +11,9 @@ import pickle
 
 def load_training_data():
 
-    dataset_path = os.path.join(os.environ['HOME'], "synth_dataset.json")
+    dataset_path = os.path.join(os.environ['HOME'], "synth_dataset.pkl")
     
-    dataset = pd.read_json(dataset_path)
+    dataset = pd.read_pickle(dataset_path)
     
     X = dataset['Squiggle'].to_numpy().tolist()
 
