@@ -14,6 +14,8 @@ import torchaudio
 import datetime
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+torch.set_default_device(device)
+print(f"Running on {device}")
 
 labels_int = np.arange(11).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
@@ -31,6 +33,8 @@ dropout_rate = 0.2
 
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate)
+model = model.to(device)
+
 
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 ctc_loss = nn.CTCLoss()
@@ -54,7 +58,6 @@ for epoch in range(epochs):
 
     #################### Training Loop #################
     print(f"Epoch {epoch}")
-    model = model.to(device)
 
     model.train()
 
