@@ -31,7 +31,8 @@ dropout_rate = 0.2
 
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate)
-model.to(device)
+model = model.to(device)
+
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 ctc_loss = nn.CTCLoss()
 
@@ -75,23 +76,8 @@ for epoch in range(epochs):
         optimizer.step()
 
         if i % 100 == 0:
-
             with open(file_write_path, 'a') as f:
                 f.write(f"\nEpoch {epoch} Batch {i} Loss {loss.item()} ")
-            
-            """
-            print(f"\nEpoch {epoch} Batch {i}")
-            print(f"Loss {loss.item()}")
-            greedy_result = greedy_decoder(model_output_timestep)
-            greedy_transcript = " ".join(greedy_result)
-            actual_transcript = get_actual_transcript(target_sequence)
-            motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
-
-            print(f"Transcript: {greedy_transcript}")
-            print(f"Actual Transcript: {actual_transcript}")
-            print(f"Motif Error Rate: {motif_err}")
-
-            """
             
         # Saving model weights
         if i % model_save_iterations == 0:
@@ -105,6 +91,7 @@ for epoch in range(epochs):
 
     
     ################## Validation Loop ####################
+    
     model.eval()
     val_loss = 0.0
     correct = 0
@@ -112,61 +99,31 @@ for epoch in range(epochs):
     with torch.no_grad():
         for i in tqdm(range(len(X_val))):
 
-            training_sequence, target_sequence = X_val[i], torch.tensor(y_val[i]).to(device)
+            validation_sequence, target_sequence = torch.tensor(X_val[i]).to(device), torch.tensor(y_val[i]).to(device)
 
-            sequence_length = len(training_sequence)
-            
-            n_samples = math.ceil(sequence_length/step_sequence) # Since we send the last one even if it is small as can be
+            model_output_timestep = model(validation_sequence) # Getting model output
 
-            seq_model_output = torch.zeros(n_samples, n_classes+1) # To include the blank token
-
-            ptr = 0
-            counter = 0
-            sequences = torch.zeros([n_samples, 1, length_per_sample])
-            while ptr <= sequence_length:
-                
-                try:
-                    if ptr + length_per_sample > sequence_length:
-                        sequence_chop = training_sequence[ptr:-1] # For when the window has crossed the end
-                        pad = np.zeros(length_per_sample - (sequence_length-ptr) + 1)
-                        sequence_chop = np.concatenate((sequence_chop, pad)).tolist()
-                    else:
-                        sequence_chop = training_sequence[ptr:ptr+length_per_sample]
-                    
-                    sequence_chop = torch.tensor(sequence_chop, dtype=torch.float32).view(1, len(sequence_chop))
-
-                    sequences[counter] = sequence_chop
-                
-                except Exception as e:
-                    print(e)
-                
-                ptr += step_sequence
-                counter+=1
-                    
-        
-            model.to(device)
-
-            # Zero out the gradients
-            optimizer.zero_grad()
-                
-            model_output_timestep = model(sequences) # Getting model output
-
-            counter += 1
-
-            input_lengths = torch.tensor(n_samples)
+            input_lengths = torch.tensor(X_val[i].shape[0])
             target_lengths = torch.tensor(len(target_sequence))
 
             loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
 
+            greedy_result = greedy_decoder(model_output_timestep)
+            greedy_transcript = " ".join(greedy_result)
+            actual_transcript = get_actual_transcript(target_sequence)
+            
             if greedy_transcript == actual_transcript:
                 correct += 1
 
-            total += 1  
+            total += 1
             val_loss += loss.item()
 
     val_loss /= len(X_val)
     val_accuracy = correct / total
     print(f"Epoch {epoch}, Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
+
+    with open(file_write_path, 'a') as f:
+        f.write(f"\n\nEpoch {epoch} Valiation Loss {val_loss:.4f} \n")
 
 
 
