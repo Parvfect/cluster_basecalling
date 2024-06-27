@@ -31,7 +31,6 @@ dropout_rate = 0.2
 
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate)
-model = model.to(device)
 
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 ctc_loss = nn.CTCLoss()
@@ -55,10 +54,15 @@ for epoch in range(epochs):
 
     #################### Training Loop #################
     print(f"Epoch {epoch}")
+    model = model.to(device)
+
     model.train()
+
     for i in tqdm(range(len(X_train))):
 
         training_sequence, target_sequence = X_train[i].to(device), torch.tensor(y_train[i]).to(device)
+
+
 
         # Zero out the gradients
         optimizer.zero_grad()
