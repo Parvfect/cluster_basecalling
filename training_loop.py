@@ -35,6 +35,8 @@ saved_model = True
 
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+ctc_loss = nn.CTCLoss()
 
 # Loading model
 if saved_model:
@@ -47,10 +49,6 @@ if saved_model:
 
 
 model = model.to(device)
-
-
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-ctc_loss = nn.CTCLoss()
 
 X, y = data_preproc()
 
