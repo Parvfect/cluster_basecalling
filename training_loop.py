@@ -30,9 +30,21 @@ hidden_size = 128
 num_layers = 3
 output_size = 11  # Number of output classes
 dropout_rate = 0.2
+saved_model = True
 
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate)
+
+# Loading model
+if saved_model:
+    data_path = os.path.join("20240701.205513.995817", "model.pth")
+    model_path = os.path.join(os.environ['HOME'], os.path.join("training_logs", data_path))
+
+    checkpoint = torch.load(model_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+
 model = model.to(device)
 
 
