@@ -11,7 +11,7 @@ import pickle
 
 def load_training_data():
 
-    dataset_path = os.path.join(os.environ['HOME'], "synth_dataset.pkl")
+    dataset_path = os.path.join(os.environ['HOME'], "synth_dataset_large.pkl")
     
     dataset = pd.read_pickle(dataset_path)
     
