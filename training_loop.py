@@ -23,7 +23,7 @@ labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
 greedy_decoder = GreedyCTCDecoder(labels=labels)
 
 model_save_path, file_write_path = get_savepaths()
-model_save_iterations = 200
+model_save_iterations = 20
 
 # Model Parameters
 input_size = 1  # Number of input channels
