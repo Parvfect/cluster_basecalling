@@ -48,7 +48,7 @@ if saved_model:
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
 
-model = model.to(device)
+
 
 X, y = data_preproc()
 
@@ -69,7 +69,7 @@ for epoch in range(epochs):
 
     #################### Training Loop #################
     print(f"Epoch {epoch}")
-
+    model = model.to(device)
     model.train()
 
     for i in tqdm(range(len(X_train))):
