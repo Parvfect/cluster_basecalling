@@ -76,13 +76,15 @@ for epoch in range(epochs):
 
         training_sequence, target_sequence = X_train[i].to(device), torch.tensor(y_train[i]).to(device)
 
-
-
         # Zero out the gradients
         optimizer.zero_grad()
-            
-        model_output_timestep = model(training_sequence) # Getting model output
 
+        try:
+            model_output_timestep = model(training_sequence) # Getting model output
+        except:
+            print(f"CUDA out of memory, training seq length = {len(training_sequence)}")
+            continue
+        
         input_lengths = torch.tensor(X_train[i].shape[0])
         target_lengths = torch.tensor(len(target_sequence))
 
