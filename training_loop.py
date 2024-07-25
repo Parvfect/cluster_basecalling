@@ -121,7 +121,10 @@ for epoch in range(epochs):
 
             validation_sequence, target_sequence = torch.tensor(X_val[i]).to(device), torch.tensor(y_val[i]).to(device)
 
-            model_output_timestep = model(validation_sequence) # Getting model output
+            try:
+                model_output_timestep = model(validation_sequence) # Getting model output
+            except:
+                continue
 
             input_lengths = torch.tensor(X_val[i].shape[0])
             target_lengths = torch.tensor(len(target_sequence))
