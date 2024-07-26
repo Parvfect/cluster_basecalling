@@ -81,19 +81,21 @@ for epoch in range(epochs):
 
         try:
             model_output_timestep = model(training_sequence) # Getting model output
+            input_lengths = torch.tensor(X_train[i].shape[0])
+            target_lengths = torch.tensor(len(target_sequence))
+    
+            loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+            
+            loss.backward()
+    
+            # Update the weights
+            optimizer.step()
         except:
             print(f"CUDA out of memory, training seq length = {len(training_sequence)}")
+            with open(file_write_path, 'a') as f:
+                f.write(f"CUDA out of memory, training seq length = {len(training_sequence)}")
             continue
         
-        input_lengths = torch.tensor(X_train[i].shape[0])
-        target_lengths = torch.tensor(len(target_sequence))
-
-        loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
-        
-        loss.backward()
-
-        # Update the weights
-        optimizer.step()
 
         if i % 100 == 0:
             with open(file_write_path, 'a') as f:
