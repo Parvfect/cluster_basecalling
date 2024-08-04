@@ -31,7 +31,7 @@ hidden_size = 128
 num_layers = 3
 output_size = 11  # Number of output classes
 dropout_rate = 0.2
-saved_model = True
+saved_model = False
 
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate)
@@ -63,6 +63,7 @@ window_overlap = 50
 length_per_sample = 150
 
 epochs = 20
+model_output_split_size = 1
 
 # Add over epochs
 for epoch in range(epochs):
@@ -79,21 +80,33 @@ for epoch in range(epochs):
         # Zero out the gradients
         optimizer.zero_grad()
 
-        try:
-            model_output_timestep = model(training_sequence) # Getting model output
+        try:        
+            
+            # Give the model the input in chunks based on the model_output_split_size flag
+            if model_output_split_size > 1:
+                model_output_timestep = torch.zeros([len(target_sequence), output_size]).to(device)
+                stepper_size = len(target_sequence) // model_output_split_size
+                for j in range(0, len(target_sequence), model_output_split_size):
+                    model_output_timestep[j:j+model_output_split_size] = model(training_sequence[j:j+model_output_split_size])
+            
+
+            else:
+                model_output_timestep = model(training_sequence) # Getting model output
+
             input_lengths = torch.tensor(X_train[i].shape[0])
             target_lengths = torch.tensor(len(target_sequence))
-    
+
             loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
             
             loss.backward()
-    
             # Update the weights
             optimizer.step()
-        except:
+
+        except Exception as e:
             print(f"CUDA out of memory, training seq length = {len(training_sequence)}")
+            print(e)
             with open(file_write_path, 'a') as f:
-                f.write(f"CUDA out of memory, training seq length = {len(training_sequence)}")
+                f.write(f"\nCUDA out of memory, training seq length = {len(training_sequence)} \n Exception ={e}")
             continue
         
 
