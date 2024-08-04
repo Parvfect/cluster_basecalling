@@ -84,10 +84,18 @@ for epoch in range(epochs):
             
             # Give the model the input in chunks based on the model_output_split_size flag
             if model_output_split_size > 1:
-                model_output_timestep = torch.zeros([len(target_sequence), output_size]).to(device)
-                stepper_size = len(target_sequence) // model_output_split_size
-                for j in range(0, len(target_sequence), model_output_split_size):
-                    model_output_timestep[j:j+model_output_split_size] = model(training_sequence[j:j+model_output_split_size])
+                model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
+                stepper_size = (input_lengths + model_output_split_size - 1) // model_output_split_size  # Adjust stepper_size to cover all elements
+
+                for j in range(0, input_lengths, stepper_size):
+                    end_index = min(j + stepper_size, len(target_sequence))
+                    
+                    # Get the model output for the current chunk
+                    model_output_chunk = model(training_sequence[j:end_index])
+                    
+                    # Ensure the sizes match before assignment
+                    model_output_timestep[j:end_index] = model_output_chunk
+                        
             
 
             else:
