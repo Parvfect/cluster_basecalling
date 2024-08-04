@@ -115,8 +115,10 @@ for epoch in range(epochs):
             print(e)
             with open(file_write_path, 'a') as f:
                 f.write(f"\nCUDA out of memory, training seq length = {len(training_sequence)} \n Exception ={e}")
-            continue
+                f.write(f"\nModel Output split size = {model_output_split_size}")
             model_output_split_size+=1
+            continue
+            
         
 
         if i % 100 == 0:
