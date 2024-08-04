@@ -31,9 +31,9 @@ def load_training_data():
         y_.append(tmp_arr)
     
     return X, y_
-        
+       
 
-def data_preproc():
+def data_preproc(chop_reads=1):
     
     n_classes = 10 
     step_sequence = 100
@@ -41,6 +41,10 @@ def data_preproc():
     length_per_sample = 150
 
     X, y = load_training_data()
+
+    if chop_reads < 1:
+      y = y[:int(len(X)*chop_reads)]
+      X = X[:int(len(X)*chop_reads)]
 
     # So we split and norm it
     sequences_dataset = []
@@ -76,4 +80,6 @@ def data_preproc():
         
         sequences_dataset.append(sequences)
         
+         
     return sequences_dataset, y
+
