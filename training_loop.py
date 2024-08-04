@@ -116,6 +116,7 @@ for epoch in range(epochs):
             with open(file_write_path, 'a') as f:
                 f.write(f"\nCUDA out of memory, training seq length = {len(training_sequence)} \n Exception ={e}")
             continue
+            model_output_split_size+=1
         
 
         if i % 100 == 0:
