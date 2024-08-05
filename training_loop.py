@@ -30,7 +30,7 @@ input_size = 1  # Number of input channels
 hidden_size = 128
 num_layers = 3
 output_size = 11  # Number of output classes
-dropout_rate = 0.2
+dropout_rate = 0.3
 saved_model = False
 
 # Model Definition
