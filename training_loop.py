@@ -30,7 +30,7 @@ input_size = 1  # Number of input channels
 hidden_size = 128
 num_layers = 3
 output_size = 11  # Number of output classes
-dropout_rate = 0.3
+dropout_rate = 0.2
 saved_model = False
 
 # Model Definition
@@ -63,7 +63,7 @@ window_overlap = 50
 length_per_sample = 150
 
 epochs = 20
-model_output_split_size = 1
+model_output_split_size = 2
 
 # Add over epochs
 for epoch in range(epochs):
@@ -76,6 +76,8 @@ for epoch in range(epochs):
     for i in tqdm(range(len(X_train))):
 
         training_sequence, target_sequence = X_train[i].to(device), torch.tensor(y_train[i]).to(device)
+        input_lengths = torch.tensor(X_train[i].shape[0])
+        target_lengths = torch.tensor(len(target_sequence))
 
         # Zero out the gradients
         optimizer.zero_grad()
@@ -88,7 +90,7 @@ for epoch in range(epochs):
                 stepper_size = (input_lengths + model_output_split_size - 1) // model_output_split_size  # Adjust stepper_size to cover all elements
 
                 for j in range(0, input_lengths, stepper_size):
-                    end_index = min(j + stepper_size, len(target_sequence))
+                    end_index = min(j + stepper_size, input_lengths)
                     
                     # Get the model output for the current chunk
                     model_output_chunk = model(training_sequence[j:end_index])
@@ -101,8 +103,7 @@ for epoch in range(epochs):
             else:
                 model_output_timestep = model(training_sequence) # Getting model output
 
-            input_lengths = torch.tensor(X_train[i].shape[0])
-            target_lengths = torch.tensor(len(target_sequence))
+            
 
             loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
             
