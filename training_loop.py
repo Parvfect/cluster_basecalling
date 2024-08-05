@@ -85,26 +85,18 @@ for epoch in range(epochs):
         try:        
             
             # Give the model the input in chunks based on the model_output_split_size flag
-            if model_output_split_size > 1:
-                model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
-                stepper_size = (input_lengths + model_output_split_size - 1) // model_output_split_size  # Adjust stepper_size to cover all elements
+            model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
+            stepper_size = (input_lengths + model_output_split_size - 1) // model_output_split_size  # Adjust stepper_size to cover all elements
 
-                for j in range(0, input_lengths, stepper_size):
-                    end_index = min(j + stepper_size, input_lengths)
-                    
-                    # Get the model output for the current chunk
-                    model_output_chunk = model(training_sequence[j:end_index])
-                    
-                    # Ensure the sizes match before assignment
-                    model_output_timestep[j:end_index] = model_output_chunk
-                        
-            
-
-            else:
-                model_output_timestep = model(training_sequence) # Getting model output
-
-            
-
+            for j in range(0, input_lengths, stepper_size):
+                end_index = min(j + stepper_size, input_lengths)
+                
+                # Get the model output for the current chunk
+                model_output_chunk = model(training_sequence[j:end_index])
+                
+                # Ensure the sizes match before assignment
+                model_output_timestep[j:end_index] = model_output_chunk
+        
             loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
             
             loss.backward()
@@ -112,11 +104,11 @@ for epoch in range(epochs):
             optimizer.step()
 
         except Exception as e:
-            print(f"CUDA out of memory, training seq length = {len(training_sequence)}")
+            print(f"Exception {e} = {len(stepper_size)}")
             print(e)
             with open(file_write_path, 'a') as f:
-                f.write(f"\nCUDA out of memory, training seq length = {len(training_sequence)} \n Exception ={e}")
-                f.write(f"\nModel Output split size = {model_output_split_size}")
+                f.write(f"\nException ={e}")
+                f.write(f"\nModel Output split size = {model_output_split_size}, {stepper_size}")
             model_output_split_size+=1
             continue
             
