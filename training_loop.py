@@ -104,7 +104,6 @@ for epoch in range(epochs):
             optimizer.step()
 
         except Exception as e:
-            print(f"Exception {e} = {len(stepper_size)}")
             print(e)
             with open(file_write_path, 'a') as f:
                 f.write(f"\nException ={e}")
