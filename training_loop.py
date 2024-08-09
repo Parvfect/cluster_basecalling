@@ -28,14 +28,14 @@ model_save_iterations = 100
 # Model Parameters
 input_size = 1  # Number of input channels
 hidden_size = 64
-num_layers = 3
+num_layers = 4
 output_size = 11  # Number of output classes
 dropout_rate = 0.2
 saved_model = False
 
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate).to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
 ctc_loss = nn.CTCLoss()
 
 # Loading model
