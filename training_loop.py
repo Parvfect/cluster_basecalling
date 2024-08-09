@@ -28,7 +28,7 @@ model_save_iterations = 100
 # Model Parameters
 input_size = 1  # Number of input channels
 hidden_size = 64
-num_layers = 4
+num_layers = 3
 output_size = 11  # Number of output classes
 dropout_rate = 0.2
 saved_model = False
@@ -36,7 +36,7 @@ saved_model = False
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate).to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
-ctc_loss = nn.CTCLoss()
+ctc_loss = nn.CTCLoss(blank=0, reduction='mean', zero_infinity=True)
 
 # Loading model
 if saved_model:
@@ -47,7 +47,7 @@ if saved_model:
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
-X, y = data_preproc(chop_reads=1)
+X, y = data_preproc(chop_reads=0.5)
 
 # Creating Train, Test, Validation sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
