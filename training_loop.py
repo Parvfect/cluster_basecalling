@@ -28,7 +28,7 @@ model_save_iterations = 100
 # Model Parameters
 input_size = 1  # Number of input channels
 hidden_size = 64
-num_layers = 3
+num_layers = 4
 output_size = 14  # Number of output classes
 dropout_rate = 0.2
 saved_model = False
@@ -160,7 +160,7 @@ for epoch in range(epochs):
     print(f"Epoch {epoch}, Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
 
     with open(file_write_path, 'a') as f:
-        f.write(f"\n\nEpoch {epoch} Valiation Loss {val_loss:.4f} \n")
+        f.write(f"\n\nEpoch {epoch} Valiation Loss {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f} \n")
 
 
 
