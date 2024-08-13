@@ -11,7 +11,7 @@ import pickle
 
 def load_training_data():
 
-    dataset_path = os.path.join(os.environ['HOME'], "synth_dataset_large.pkl")
+    dataset_path = os.path.join(os.environ['HOME'], "short_read_dataset.pkl")
     
     dataset = pd.read_pickle(dataset_path)
     
@@ -19,18 +19,7 @@ def load_training_data():
 
     y = dataset['Motifs'].to_numpy()
 
-    y_ = []
-    
-    for i in range(len(y)):
-        new_seq = ""
-        old_seq = y[i]
-        tmp_arr = []
-        for c in old_seq:
-            tmp_arr.append(int(int(c) + 1))
-            new_seq += f"{int(c)+1}"
-        y_.append(tmp_arr)
-    
-    return X, y_
+    return X, y
        
 
 def data_preproc(chop_reads=1):
