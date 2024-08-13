@@ -109,7 +109,7 @@ for epoch in range(epochs):
             
         
 
-        if i % 100 == 0:
+        if i % 4000 == 0:
             with open(file_write_path, 'a') as f:
                 f.write(f"\nEpoch {epoch} Batch {i} Loss {loss.item()} ")
             
