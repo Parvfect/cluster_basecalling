@@ -163,7 +163,7 @@ for epoch in range(epochs):
 
     val_loss /= len(X_val)
     val_accuracy = np.mean(val_acc)
-    print(f"Epoch {epoch}, Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
+    print(f"Epoch {epoch}, Validation Loss: {val_loss:.4f}, Validation Edit Distance: {val_accuracy:.4f}")
 
     with open(file_write_path, 'a') as f:
         f.write(f"\n\nEpoch {epoch} Valiation Loss {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f} \n")
