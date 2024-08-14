@@ -110,8 +110,17 @@ for epoch in range(epochs):
         
 
         if i % 4000 == 0:
+            greedy_result = greedy_decoder(model_output_timestep)
+            greedy_transcript = " ".join(greedy_result)
+            actual_transcript = get_actual_transcript(target_sequence)
+            motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
+
             with open(file_write_path, 'a') as f:
                 f.write(f"\nEpoch {epoch} Batch {i} Loss {loss.item()} ")
+                f.write(f"Transcript: {greedy_transcript}")
+                f.write(f"Actual Transcript: {actual_transcript}")
+                f.write(f"Motif Error Rate: {motif_err}")
+
             
         # Saving model weights
         if i % model_save_iterations == 0:
