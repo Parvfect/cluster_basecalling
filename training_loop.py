@@ -137,8 +137,7 @@ for epoch in range(epochs):
     
     model.eval()
     val_loss = 0.0
-    correct = 0
-    total = 0
+    val_acc = []
     with torch.no_grad():
         for i in tqdm(range(len(X_val))):
 
@@ -157,15 +156,13 @@ for epoch in range(epochs):
             greedy_result = greedy_decoder(model_output_timestep)
             greedy_transcript = " ".join(greedy_result)
             actual_transcript = get_actual_transcript(target_sequence)
+            motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
+            val_acc.append(motif_err)
             
-            if greedy_transcript == actual_transcript:
-                correct += 1
-
-            total += 1
             val_loss += loss.item()
 
     val_loss /= len(X_val)
-    val_accuracy = correct / total
+    val_accuracy = np.mean(val_acc)
     print(f"Epoch {epoch}, Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
 
     with open(file_write_path, 'a') as f:
