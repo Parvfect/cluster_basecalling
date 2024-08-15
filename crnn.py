@@ -13,10 +13,10 @@ class CNN_BiGRU_Classifier(nn.Module):
         self.conv1 = nn.Conv1d(in_channels=input_size, out_channels=32, kernel_size=3, padding=1)
         self.norm1 = nn.LayerNorm(32)
         self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
-        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
-
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=6, padding=1)
+        self.conv3 = nn.Conv1d(in_channels=64, out_channels=96, kernel_size=8, padding=1)
         # Fully connected Layer
-        self.fc = nn.Linear(64, hidden_size)
+        self.fc = nn.Linear(96, hidden_size)
 
         # Bidirectional GRU layers
         self.bigru = nn.GRU(hidden_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
@@ -40,6 +40,9 @@ class CNN_BiGRU_Classifier(nn.Module):
         #x = self.norm1(x)
 
         x = self.conv2(x)
+        x = torch.relu(x)
+
+        x = self.conv3(x)
         x = torch.relu(x)
 
         # Fully connected layer
