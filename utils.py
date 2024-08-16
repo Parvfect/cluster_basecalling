@@ -1,6 +1,7 @@
 
 import datetime
 import os
+import numpy as np
 
 def get_savepaths():
 

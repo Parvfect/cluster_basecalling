@@ -59,8 +59,8 @@ step_sequence = 100
 window_overlap = 50
 length_per_sample = 150
 
-epochs = 200
-model_output_split_size = 2
+epochs = 100
+model_output_split_size = 1
 
 # Add over epochs
 for epoch in range(epochs):
@@ -109,19 +109,21 @@ for epoch in range(epochs):
             
         
 
-        if i % 4000 == 0:
+        if i % 100 == 0:
             greedy_result = greedy_decoder(model_output_timestep)
             greedy_transcript = " ".join(greedy_result)
             actual_transcript = get_actual_transcript(target_sequence)
             motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
             motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
 
+
             with open(file_write_path, 'a') as f:
                 f.write(f"\nEpoch {epoch} Batch {i} Loss {loss.item()} ")
                 f.write(f"Transcript: {greedy_transcript}")
                 f.write(f"Actual Transcript: {actual_transcript}")
-                f.write(f"Motif Error Rate: {motif_err}")
+                f.write(f"Sequence edit distance: {motif_err}")
                 f.write(f"Motifs Identified: {motifs_identifed}")
+            
 
             
         # Saving model weights
@@ -133,6 +135,7 @@ for epoch in range(epochs):
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss,
             }, model_save_path)
+        
 
     
     ################## Validation Loop ####################
@@ -160,7 +163,7 @@ for epoch in range(epochs):
             greedy_transcript = " ".join(greedy_result)
             actual_transcript = get_actual_transcript(target_sequence)
             motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
-            motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
+            motifs_identified = get_motifs_identified(actual_transcript, greedy_transcript)
             val_acc.append(motif_err)
             motifs_identified_arr.append(motifs_identified)
             
@@ -170,9 +173,11 @@ for epoch in range(epochs):
     val_accuracy = np.mean(val_acc)
     motifs_identified = np.mean(motifs_identified_arr)
     print(f"Epoch {epoch}, Validation Loss: {val_loss:.4f}, Validation Edit Distance: {val_accuracy:.4f}")
+    print(f"Motifs Identified: {motifs_identified:.4f}")
 
     with open(file_write_path, 'a') as f:
-        f.write(f"\n\nEpoch {epoch} Valiation Loss {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f} \n Motifs Identified {motifs_identified:.4f}")
+        f.write(f"\n\nEpoch {epoch} Valiation Loss {val_loss:.4f}, Validation Edit Distance: {val_accuracy:.4f} \n Motifs Identified {motifs_identified:.4f}")
+    
 
 # Test Loop
 model.eval()
@@ -207,8 +212,7 @@ test_accuracy = np.mean(distances_arr)
 motifs_identifed = np.mean(motifs_identifed_arr)
 
 with open(file_write_path, 'a') as f:
-    f.write(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}, Motifs Identified: {motifs_identifed:.4f}")
-    
+    f.write(f"Test Loss: {test_loss:.4f}, Test Edit Distance: {test_accuracy:.4f}, Motifs Identified: {motifs_identifed:.4f}")
 
 
 
