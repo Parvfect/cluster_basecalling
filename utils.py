@@ -25,3 +25,20 @@ def get_actual_transcript(target_sequence):
         seq += f" {i}"
 
     return seq
+
+def get_motifs_identified(target_sequence, decoded_sequence, n_motifs=13):
+
+    target_sequence = target_sequence.split()
+    decoded_sequence = decoded_sequence.split()
+
+    target_counts = np.zeros(n_motifs)
+    decoded_counts = np.zeros(n_motifs)
+
+    for i in target_sequence:
+        target_counts[int(i)-1] += 1
+    for i in decoded_sequence:
+        decoded_counts[int(i)-1] += 1
+
+    # we care about the counts of the motifs in the target sequence
+    return sum([j if j<=i else i for i,j in zip(target_counts, decoded_counts)]) / sum(target_counts)
+
