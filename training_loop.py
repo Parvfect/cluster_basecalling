@@ -9,7 +9,7 @@ import numpy as np
 from training_data import data_preproc
 from sklearn.model_selection import train_test_split
 from greedy_decoder import GreedyCTCDecoder
-from utils import get_actual_transcript, get_savepaths
+from utils import get_actual_transcript, get_savepaths, get_motifs_identified
 import torchaudio
 import datetime
 import os
@@ -114,12 +114,14 @@ for epoch in range(epochs):
             greedy_transcript = " ".join(greedy_result)
             actual_transcript = get_actual_transcript(target_sequence)
             motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
+            motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
 
             with open(file_write_path, 'a') as f:
                 f.write(f"\nEpoch {epoch} Batch {i} Loss {loss.item()} ")
                 f.write(f"Transcript: {greedy_transcript}")
                 f.write(f"Actual Transcript: {actual_transcript}")
                 f.write(f"Motif Error Rate: {motif_err}")
+                f.write(f"Motifs Identified: {motifs_identifed}")
 
             
         # Saving model weights
@@ -138,6 +140,7 @@ for epoch in range(epochs):
     model.eval()
     val_loss = 0.0
     val_acc = []
+    motifs_identified_arr = []
     with torch.no_grad():
         for i in tqdm(range(len(X_val))):
 
@@ -157,16 +160,55 @@ for epoch in range(epochs):
             greedy_transcript = " ".join(greedy_result)
             actual_transcript = get_actual_transcript(target_sequence)
             motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
+            motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
             val_acc.append(motif_err)
+            motifs_identified_arr.append(motifs_identified)
             
             val_loss += loss.item()
 
     val_loss /= len(X_val)
     val_accuracy = np.mean(val_acc)
+    motifs_identified = np.mean(motifs_identified_arr)
     print(f"Epoch {epoch}, Validation Loss: {val_loss:.4f}, Validation Edit Distance: {val_accuracy:.4f}")
 
     with open(file_write_path, 'a') as f:
-        f.write(f"\n\nEpoch {epoch} Valiation Loss {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f} \n")
+        f.write(f"\n\nEpoch {epoch} Valiation Loss {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f} \n Motifs Identified {motifs_identified:.4f}")
+
+# Test Loop
+model.eval()
+test_loss = 0.0
+distances_arr = []
+motifs_identifed_arr = []
+with torch.no_grad():
+    for i in tqdm(range(len(X_test))):
+
+        test_sequence, target_sequence = torch.tensor(X_test[i]).to(device), torch.tensor(y_test[i]).to(device)
+
+        model_output_timestep = model(test_sequence) # Getting model output
+
+        input_lengths = torch.tensor(X_test[i].shape[0])
+        target_lengths = torch.tensor(len(target_sequence))
+
+        loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+        test_loss += loss.item()
+
+        greedy_result = greedy_decoder(model_output_timestep)
+        greedy_transcript = " ".join(greedy_result)
+        actual_transcript = get_actual_transcript(target_sequence)
+
+        motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
+        distances_arr.append(motif_err)
+
+        motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
+        motifs_identifed_arr.append(motifs_identifed)
+
+test_loss /= len(X_test)
+test_accuracy = np.mean(distances_arr)
+motifs_identifed = np.mean(motifs_identifed_arr)
+
+with open(file_write_path, 'a') as f:
+    f.write(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}, Motifs Identified: {motifs_identifed:.4f}")
+    
 
 
 
