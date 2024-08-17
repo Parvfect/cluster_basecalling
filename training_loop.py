@@ -113,7 +113,7 @@ for epoch in range(epochs):
             greedy_result = greedy_decoder(model_output_timestep)
             greedy_transcript = " ".join(greedy_result)
             actual_transcript = get_actual_transcript(target_sequence)
-            motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
+            motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
             motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
 
 
@@ -162,7 +162,7 @@ for epoch in range(epochs):
             greedy_result = greedy_decoder(model_output_timestep)
             greedy_transcript = " ".join(greedy_result)
             actual_transcript = get_actual_transcript(target_sequence)
-            motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
+            motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
             motifs_identified = get_motifs_identified(actual_transcript, greedy_transcript)
             val_acc.append(motif_err)
             motifs_identified_arr.append(motifs_identified)
@@ -201,7 +201,7 @@ with torch.no_grad():
         greedy_transcript = " ".join(greedy_result)
         actual_transcript = get_actual_transcript(target_sequence)
 
-        motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_result) / len(actual_transcript)
+        motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
         distances_arr.append(motif_err)
 
         motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
