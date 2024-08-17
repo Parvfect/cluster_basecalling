@@ -109,7 +109,7 @@ for epoch in range(epochs):
             
         
 
-        if i % 100 == 0:
+        if i % 4000 == 0:
             greedy_result = greedy_decoder(model_output_timestep)
             greedy_transcript = " ".join(greedy_result)
             actual_transcript = get_actual_transcript(target_sequence)
