@@ -12,6 +12,7 @@ import pickle
 def load_training_data():
 
     dataset_path = os.path.join(os.environ['HOME'], "short_read_dataset.pkl")
+    dataset_path = os.path.join(os.environ['HOME'], "empirical_dataset_cluster.pkl")
     
     dataset = pd.read_pickle(dataset_path)
     
