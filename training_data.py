@@ -13,10 +13,11 @@ def load_training_data():
 
     dataset_path = os.path.join(os.environ['HOME'], "short_read_dataset.pkl")
     dataset_path = os.path.join(os.environ['HOME'], "empirical_dataset_cluster.pkl")
+    dataset_path = os.path.join(os.environ['HOME'], "empirical_train_dataset_v3.pkl")
     
     dataset = pd.read_pickle(dataset_path)
     
-    X = dataset['Squiggle'].to_numpy().tolist()
+    X = dataset['squiggle'].to_numpy().tolist()
 
     y = dataset['Motifs'].to_numpy()
 
