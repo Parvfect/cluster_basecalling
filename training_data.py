@@ -11,15 +11,13 @@ import pickle
 
 def load_training_data():
 
-    dataset_path = os.path.join(os.environ['HOME'], "short_read_dataset.pkl")
-    dataset_path = os.path.join(os.environ['HOME'], "empirical_dataset_cluster.pkl")
-    dataset_path = os.path.join(os.environ['HOME'], "empirical_train_dataset_v3.pkl")
+    dataset_path = os.path.join(os.environ['HOME'], "empirical_train_dataset_v4_spacers.pkl")
     
     dataset = pd.read_pickle(dataset_path)
     
     X = dataset['squiggle'].to_numpy().tolist()
 
-    y = dataset['Motifs'].to_numpy()
+    y = dataset['Spacer_Sequence'].to_numpy()
 
     return X, y
        
