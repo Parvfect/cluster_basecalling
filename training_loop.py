@@ -29,7 +29,7 @@ model_save_iterations = 100
 
 # Model Parameters
 input_size = 1  # Number of input channels
-hidden_size = 256
+hidden_size = 128
 num_layers = 4
 output_size = output_classes  # Number of output classes
 dropout_rate = 0.2
