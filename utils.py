@@ -27,7 +27,7 @@ def get_actual_transcript(target_sequence):
 
     return seq
 
-def get_motifs_identified(target_sequence, decoded_sequence, n_motifs=13):
+def get_motifs_identified(target_sequence, decoded_sequence, n_motifs=19):
 
     target_sequence = target_sequence.split()
     decoded_sequence = decoded_sequence.split()
