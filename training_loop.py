@@ -18,7 +18,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.set_default_device(device)
 print(f"Running on {device}")
 
-labels_int = np.arange(14).tolist()
+labels_int = np.arange(9).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
 greedy_decoder = GreedyCTCDecoder(labels=labels)
 
@@ -29,7 +29,7 @@ model_save_iterations = 100
 input_size = 1  # Number of input channels
 hidden_size = 256
 num_layers = 4
-output_size = 14  # Number of output classes
+output_size = 9  # Number of output classes
 dropout_rate = 0.2
 saved_model = False
 
