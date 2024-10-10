@@ -20,7 +20,7 @@ print(f"Running on {device}")
 
 output_classes = 19 # including blank
 
-labels_int = np.arange(19).tolist()
+labels_int = np.arange(output_classes).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
 greedy_decoder = GreedyCTCDecoder(labels=labels)
 
