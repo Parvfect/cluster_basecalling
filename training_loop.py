@@ -18,7 +18,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.set_default_device(device)
 print(f"Running on {device}")
 
-labels_int = np.arange(9).tolist()
+output_classes = 19 # including blank
+
+labels_int = np.arange(19).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
 greedy_decoder = GreedyCTCDecoder(labels=labels)
 
@@ -29,7 +31,7 @@ model_save_iterations = 100
 input_size = 1  # Number of input channels
 hidden_size = 256
 num_layers = 4
-output_size = 9  # Number of output classes
+output_size = output_classes  # Number of output classes
 dropout_rate = 0.2
 saved_model = False
 
@@ -54,7 +56,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25, random_state=1) 
 torch.autograd.set_detect_anomaly(True)
 
-n_classes = 14
+n_classes = output_classes
 step_sequence = 100
 window_overlap = 50
 length_per_sample = 150
