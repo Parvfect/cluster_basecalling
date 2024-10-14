@@ -51,17 +51,24 @@ if saved_model:
 
 X, y = data_preproc(chop_reads=1)
 
+dataset_path = os.path.join(os.environ['HOME'], "empirical_train_dataset_v5_payload_seq.pkl")
+df = pd.read_pickle(dataset_path)
+payload_label = df['Payload_Sequence'].to_numpy()
+
 # Creating Train, Test, Validation sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25, random_state=1) 
 torch.autograd.set_detect_anomaly(True)
+
+X_train, X_test, payload_train, payload_test = train_test_split(X, payload_label, test_size=0.2, random_state=42)
+X_train, X_val, payload_train, payload_val = train_test_split(X_train, payload_train, test_size=0.25, random_state=1) 
 
 n_classes = output_classes
 step_sequence = 100
 window_overlap = 50
 length_per_sample = 150
 
-epochs = 100
+epochs = 50
 model_output_split_size = 1
 
 # Add over epochs
@@ -74,8 +81,11 @@ for epoch in range(epochs):
     for i in tqdm(range(len(X_train))):
 
         training_sequence, target_sequence = X_train[i].to(device), torch.tensor(y_train[i]).to(device)
+        payload_sequence = torch.tensor(payload_train[i]).to(device)
+        
         input_lengths = torch.tensor(X_train[i].shape[0])
         target_lengths = torch.tensor(len(target_sequence))
+        payload_lengths = torch.tensor(len(payload_sequence))
 
         # Zero out the gradients
         optimizer.zero_grad()
@@ -95,8 +105,10 @@ for epoch in range(epochs):
                 # Ensure the sizes match before assignment
                 model_output_timestep[j:end_index] = model_output_chunk
         
-            loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
-            
+            loss_ = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+            loss = ctc_loss(model_output_timestep, payload_sequence, input_lengths, payload_lengths)
+
+            # Training on ground truth
             loss.backward()
             # Update the weights
             optimizer.step()
@@ -114,13 +126,15 @@ for epoch in range(epochs):
         if i % 4000 == 0:
             greedy_result = greedy_decoder(model_output_timestep)
             greedy_transcript = " ".join(greedy_result)
-            actual_transcript = get_actual_transcript(target_sequence)
+            actual_transcript_ = get_actual_transcript(target_sequence)
+            actual_transcript = get_actual_transcript(payload_sequence)
             motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
             motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
+            motifs_identified_ = get_motifs_identified(actual_transcript_, greedy_transcript)
 
 
             with open(file_write_path, 'a') as f:
-                f.write(f"\nEpoch {epoch} Batch {i} Loss {loss.item()} ")
+                f.write(f"\nEpoch {epoch} Batch {i} Loss {loss.item()} Loss_ {loss_.item()} ")
                 f.write(f"Transcript: {greedy_transcript}")
                 f.write(f"Actual Transcript: {actual_transcript}")
                 f.write(f"Sequence edit distance: {motif_err}")
@@ -150,6 +164,7 @@ for epoch in range(epochs):
         for i in tqdm(range(len(X_val))):
 
             validation_sequence, target_sequence = torch.tensor(X_val[i]).to(device), torch.tensor(y_val[i]).to(device)
+            payload_sequence = torch.tensor(payload_val[i]).to(device)
 
             try:
                 model_output_timestep = model(validation_sequence) # Getting model output
@@ -158,12 +173,15 @@ for epoch in range(epochs):
 
             input_lengths = torch.tensor(X_val[i].shape[0])
             target_lengths = torch.tensor(len(target_sequence))
+            payload_lengths = torch.tensor(len(payload_sequence))
 
-            loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+            #loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+            loss = ctc_loss(model_output_timestep, payload_sequence, input_lengths, payload_lengths)
 
             greedy_result = greedy_decoder(model_output_timestep)
             greedy_transcript = " ".join(greedy_result)
-            actual_transcript = get_actual_transcript(target_sequence)
+            #actual_transcript = get_actual_transcript(target_sequence)
+            actual_transcript = get_actual_transcript(payload_sequence)
             motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
             motifs_identified = get_motifs_identified(actual_transcript, greedy_transcript)
             val_acc.append(motif_err)
@@ -190,19 +208,23 @@ with torch.no_grad():
     for i in tqdm(range(len(X_test))):
 
         test_sequence, target_sequence = torch.tensor(X_test[i]).to(device), torch.tensor(y_test[i]).to(device)
+        payload_sequence = torch.tensor(payload_test[i]).to(device)
 
         model_output_timestep = model(test_sequence) # Getting model output
 
         input_lengths = torch.tensor(X_test[i].shape[0])
         target_lengths = torch.tensor(len(target_sequence))
+        payload_lengths = torch.tensor(len(payload_sequence))
 
-        loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+        #loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+        loss = ctc_loss(model_output_timestep, payload_sequence, input_lengths, payload_lengths)
         test_loss += loss.item()
 
         greedy_result = greedy_decoder(model_output_timestep)
         greedy_transcript = " ".join(greedy_result)
-        actual_transcript = get_actual_transcript(target_sequence)
-
+        #actual_transcript = get_actual_transcript(target_sequence)
+        actual_transcript = get_actual_transcript(payload_sequence)
+        
         motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
         distances_arr.append(motif_err)
 
