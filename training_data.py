@@ -23,14 +23,14 @@ def load_training_data(dataset_path=None, column='Spacer_Sequence'):
     return X, y
        
 
-def data_preproc(chop_reads=1):
+def data_preproc(chop_reads=1, dataset_path=None, column='Spacer_Sequence'):
     
     n_classes = 10 
     step_sequence = 100
     window_overlap = 50
     length_per_sample = 150
 
-    X, y = load_training_data()
+    X, y = load_training_data(dataset_path=None, column='Spacer_Sequence')
 
     if chop_reads < 1:
       y = y[:int(len(X)*chop_reads)]
