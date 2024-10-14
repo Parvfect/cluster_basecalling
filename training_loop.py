@@ -1,6 +1,7 @@
 
 import torch
 import torch.nn as nn
+import pandas as pd
 import torch.optim as optim
 from crnn import CNN_BiGRU_Classifier
 import math
