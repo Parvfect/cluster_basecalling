@@ -9,15 +9,16 @@ import math
 import os
 import pickle
 
-def load_training_data():
+def load_training_data(dataset_path=None, column='Spacer_Sequence'):
 
-    dataset_path = os.path.join(os.environ['HOME'], "empirical_train_dataset_v4_spacers.pkl")
-    
+    if not dataset_path:
+        dataset_path = os.path.join(os.environ['HOME'], "empirical_train_dataset_v5_payload_seq.pkl")
+        
     dataset = pd.read_pickle(dataset_path)
     
     X = dataset['squiggle'].to_numpy().tolist()
 
-    y = dataset['Spacer_Sequence'].to_numpy()
+    y = dataset[column].to_numpy()
 
     return X, y
        
