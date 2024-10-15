@@ -134,7 +134,7 @@ for epoch in range(epochs):
             
 
             with open(file_write_path, 'a') as f:
-                f.write(f"\nEpoch {epoch} Batch {i} Main Loss {loss.item()} Payload Loss {payload_loss_.item()} ")
+                f.write(f"\nEpoch {epoch} Batch {i} Main Loss {loss.item()} Payload Loss {payload_loss.item()} ")
                 f.write(f"Transcript: {greedy_transcript}")
                 f.write(f"Actual Transcript: {actual_transcript}")
                 f.write(f"Sequence edit distance: {motif_err}")
