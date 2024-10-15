@@ -69,7 +69,7 @@ step_sequence = 100
 window_overlap = 50
 length_per_sample = 150
 
-epochs = 50
+epochs = 20
 model_output_split_size = 1
 
 # Add over epochs
@@ -106,8 +106,8 @@ for epoch in range(epochs):
                 # Ensure the sizes match before assignment
                 model_output_timestep[j:end_index] = model_output_chunk
         
-            loss_ = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
-            loss = ctc_loss(model_output_timestep, payload_sequence, input_lengths, payload_lengths)
+            loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+            payload_loss = ctc_loss(model_output_timestep, payload_sequence, input_lengths, payload_lengths)
 
             # Training on ground truth
             loss.backward()
@@ -127,15 +127,14 @@ for epoch in range(epochs):
         if i % 4000 == 0:
             greedy_result = greedy_decoder(model_output_timestep)
             greedy_transcript = " ".join(greedy_result)
-            actual_transcript_ = get_actual_transcript(target_sequence)
-            actual_transcript = get_actual_transcript(payload_sequence)
+            actual_transcript = get_actual_transcript(target_sequence)
+            #actual_transcript = get_actual_transcript(payload_sequence)
             motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
             motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
-            motifs_identified_ = get_motifs_identified(actual_transcript_, greedy_transcript)
-
+            
 
             with open(file_write_path, 'a') as f:
-                f.write(f"\nEpoch {epoch} Batch {i} Loss {loss.item()} Loss_ {loss_.item()} ")
+                f.write(f"\nEpoch {epoch} Batch {i} Main Loss {loss.item()} Payload Loss {payload_loss_.item()} ")
                 f.write(f"Transcript: {greedy_transcript}")
                 f.write(f"Actual Transcript: {actual_transcript}")
                 f.write(f"Sequence edit distance: {motif_err}")
@@ -176,13 +175,13 @@ for epoch in range(epochs):
             target_lengths = torch.tensor(len(target_sequence))
             payload_lengths = torch.tensor(len(payload_sequence))
 
-            #loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
-            loss = ctc_loss(model_output_timestep, payload_sequence, input_lengths, payload_lengths)
+            loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+            payload_loss = ctc_loss(model_output_timestep, payload_sequence, input_lengths, payload_lengths)
 
             greedy_result = greedy_decoder(model_output_timestep)
             greedy_transcript = " ".join(greedy_result)
-            #actual_transcript = get_actual_transcript(target_sequence)
-            actual_transcript = get_actual_transcript(payload_sequence)
+            actual_transcript = get_actual_transcript(target_sequence)
+            #actual_transcript = get_actual_transcript(payload_sequence)
             motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
             motifs_identified = get_motifs_identified(actual_transcript, greedy_transcript)
             val_acc.append(motif_err)
@@ -197,7 +196,7 @@ for epoch in range(epochs):
     print(f"Motifs Identified: {motifs_identified:.4f}")
 
     with open(file_write_path, 'a') as f:
-        f.write(f"\n\nEpoch {epoch} Valiation Loss {val_loss:.4f}, Validation Edit Distance: {val_accuracy:.4f} \n Motifs Identified {motifs_identified:.4f}")
+        f.write(f"\n\nEpoch {epoch} Validation Loss {val_loss:.4f}, Validation Edit Distance: {val_accuracy:.4f} \n Motifs Identified {motifs_identified:.4f}")
     
 
 # Test Loop
@@ -217,14 +216,14 @@ with torch.no_grad():
         target_lengths = torch.tensor(len(target_sequence))
         payload_lengths = torch.tensor(len(payload_sequence))
 
-        #loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
-        loss = ctc_loss(model_output_timestep, payload_sequence, input_lengths, payload_lengths)
+        loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+        #loss = ctc_loss(model_output_timestep, payload_sequence, input_lengths, payload_lengths)
         test_loss += loss.item()
 
         greedy_result = greedy_decoder(model_output_timestep)
         greedy_transcript = " ".join(greedy_result)
-        #actual_transcript = get_actual_transcript(target_sequence)
-        actual_transcript = get_actual_transcript(payload_sequence)
+        actual_transcript = get_actual_transcript(target_sequence)
+        #actual_transcript = get_actual_transcript(payload_sequence)
         
         motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
         distances_arr.append(motif_err)
