@@ -69,7 +69,7 @@ step_sequence = 100
 window_overlap = 50
 length_per_sample = 150
 
-epochs = 20
+epochs = 40
 model_output_split_size = 1
 
 # Add over epochs
