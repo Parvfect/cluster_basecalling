@@ -9,32 +9,36 @@ import math
 import os
 import pickle
 
-def load_training_data(dataset_path=None, column='Spacer_Sequence'):
+def load_training_data(dataset_path=None, column='Spacer_Sequence', sample=False):
 
     if not dataset_path:
         dataset_path = os.path.join(os.environ['HOME'], "empirical_train_dataset_v5_payload_seq.pkl")
         
     dataset = pd.read_pickle(dataset_path)
+
+    if sample:
+        dataset = dataset.sample(frac=0.005, random_state=1)
     
     X = dataset['squiggle'].to_numpy().tolist()
 
+    payload = dataset['Payload_Sequence'].to_numpy()
+
     y = dataset[column].to_numpy()
 
-    return X, y
+    return X, y, payload
        
 
-def data_preproc(chop_reads=1, dataset_path=None, column='Spacer_Sequence'):
+def data_preproc(X, y, payload, chop_reads=1):
     
-    n_classes = 10 
+    n_classes = 10
     step_sequence = 100
     window_overlap = 50
     length_per_sample = 150
 
-    X, y = load_training_data(dataset_path=None, column='Spacer_Sequence')
-
     if chop_reads < 1:
       y = y[:int(len(X)*chop_reads)]
       X = X[:int(len(X)*chop_reads)]
+      payload = payload[:int(len(X)*chop_reads)]
 
     # So we split and norm it
     sequences_dataset = []
@@ -71,5 +75,5 @@ def data_preproc(chop_reads=1, dataset_path=None, column='Spacer_Sequence'):
         sequences_dataset.append(sequences)
         
          
-    return sequences_dataset, y
+    return sequences_dataset, y, payload
 
