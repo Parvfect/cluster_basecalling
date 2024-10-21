@@ -41,7 +41,6 @@ output_size = output_classes  # Number of output classes
 dropout_rate = 0.2
 saved_model = True
 save_model = True
-model_save_path = 'model.pth'
 alpha = 0.02
 model_path = "model_underfit.pth"
 test_data_path = 'sampled_test_dataset_v4_spacers.pkl'
@@ -54,6 +53,16 @@ ctc_loss = nn.CTCLoss(
 
 torch.autograd.set_detect_anomaly(True)
 
+
+def set_variables(msp, tdp, mp, sm, fwp):
+
+    global model_save_path, test_data_path, model_path, saved_model, file_write_path
+    model_save_path = msp
+    test_data_path = tdp
+    model_path = mp
+    saved_model = sm
+    file_write_path = fwp
+    
 
 def prepare_data_for_training(dataset_path, sample):
 
@@ -133,8 +142,11 @@ def unseen_data_test_loop(test_X, test_y, test_payload, alpha, model):
             test_loss += loss.item()
 
     test_loss /= len(test_X)
+    print(target_metrics_arr)
     target_metrics = np.mean(np.array(target_metrics_arr), axis=0)
     payload_metrics = np.mean(np.array(target_metrics_arr), axis=0)
+
+    print(target_metrics)
         
     display_metrics(
         file_write_path, greedy_transcript, actual_transcript,
@@ -194,7 +206,7 @@ def train_model(
                 display_metrics(
                     file_write_path, greedy_transcript, actual_transcript,
                     payload_transcript, target_metrics, payload_metrics,
-                    loss, True, epoch, i)
+                    loss, type=0, epoch=epoch, batch=i)
                 
             if save_model:
                 if i % model_save_iterations == 0:
@@ -251,16 +263,16 @@ def train_model(
                         f.write(f"\nException ={e}")
                     continue
                 
-        val_loss /= len(X_val)
-        target_metrics = np.mean(np.array(target_metrics_arr), axis=0)
-        payload_metrics = np.mean(np.array(target_metrics_arr), axis=0)
-        
-        display_metrics(
-            file_write_path, greedy_transcript, actual_transcript,
-            payload_transcript, target_metrics, payload_metrics, val_loss,
-            type=1, epoch=epoch)
-        
-        unseen_data_test_loop(test_X, test_y, test_payload, alpha, model)
+            val_loss /= len(X_val)
+            target_metrics = np.mean(np.array(target_metrics_arr), axis=0)
+            payload_metrics = np.mean(np.array(target_metrics_arr), axis=0)
+            
+            display_metrics(
+                file_write_path, greedy_transcript, actual_transcript,
+                payload_transcript, target_metrics, payload_metrics, val_loss,
+                type=1, epoch=epoch)
+            
+            unseen_data_test_loop(test_X, test_y, test_payload, alpha, model)
 
     return model
         

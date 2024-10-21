@@ -43,6 +43,7 @@ def get_motifs_identified(target_sequence, decoded_sequence, n_motifs=19):
     payload_err = 0
     n_cycles = 0
 
+
     for i in range(len(target_cycles)):
         found_motifs_arr = [motif for motif in payload_cycles[i] if motif in target_cycles[i]]
         motif_errors = [motif for motif in payload_cycles[i] if i not in target_cycles[i]]
