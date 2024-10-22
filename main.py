@@ -29,7 +29,7 @@ if __name__ == '__main__':
     cluster = args.cluster
 
     if cluster:
-        uid = str(datetime.datetime.now()).replace(' ', '.').replace('-','').replace(':',"")
+        uid = str(datetime.now()).replace(' ', '.').replace('-','').replace(':',"")
         uid += f'-alpha_{alpha}_epochs_{epochs}'
 
         savepath = os.path.join(os.environ['HOME'], os.path.join("training_logs", f"{uid}"))
