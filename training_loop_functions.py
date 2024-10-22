@@ -30,8 +30,8 @@ greedy_decoder = GreedyCTCDecoder(labels=labels)
 #model_save_path, file_write_path = get_savepaths()
 file_write_path = "training_logs.txt"
 
-model_save_iterations = 2000
-display_iterations = 2000
+model_save_iterations = 5000
+display_iterations = 5000
 
 # Model Parameters
 input_size = 1  # Number of input channels
