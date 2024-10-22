@@ -83,20 +83,20 @@ def prepare_data_for_training(dataset_path, sample):
     # Creating Train, Test, Validation sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     X_train, X_val, y_train, y_val = train_test_split(
-        X_train, y_train, test_size=0.25, random_state=1) 
+        X_train, y_train, test_size=0.10, random_state=1) 
 
     X_train, X_test, payload_train, payload_test = train_test_split(X, payload_label, test_size=0.2, random_state=42)
-    X_train, X_val, payload_train, payload_val = train_test_split(X_train, payload_train, test_size=0.25, random_state=1)
+    X_train, X_val, payload_train, payload_val = train_test_split(X_train, payload_train, test_size=0.10, random_state=1)
 
     unseen_data = pd.read_pickle(test_data_path)
-    unseen_data = unseen_data.sample(frac=0.005, random_state=1)
+    unseen_data = unseen_data.sample(frac=0.01, random_state=1)
     test_X = unseen_data['squiggle'].to_numpy()
     test_y = unseen_data['Spacer_Sequence'].to_numpy()
     test_payload = unseen_data['Payload'].to_numpy()
 
     test_X, test_y, test_payload = data_preproc(test_X, test_y, test_payload, chop_reads=1)
 
-    return X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, test_X, test_y, test_payload, payload_val, model, optimizer
+    return X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, payload_val, test_X, test_y, test_payload, model, optimizer
 
 def unseen_data_test_loop(test_X, test_y, test_payload, alpha, model):
     
@@ -142,11 +142,8 @@ def unseen_data_test_loop(test_X, test_y, test_payload, alpha, model):
             test_loss += loss.item()
 
     test_loss /= len(test_X)
-    print(target_metrics_arr)
     target_metrics = np.mean(np.array(target_metrics_arr), axis=0)
     payload_metrics = np.mean(np.array(target_metrics_arr), axis=0)
-
-    print(target_metrics)
         
     display_metrics(
         file_write_path, greedy_transcript, actual_transcript,
@@ -222,9 +219,6 @@ def train_model(
         val_loss = 0.0
         target_metrics_arr = []
         payload_metrics_arr = []
-        greedy_transcript = ''
-        actual_transcript = ''
-        payload_transcript = ''
 
         with torch.no_grad():
             for i in tqdm(range(len(X_val))):
@@ -233,35 +227,29 @@ def train_model(
                 target_sequence = torch.tensor(y_val[i]).to(device)
                 payload_sequence = torch.tensor(payload_val[i]).to(device)
 
-                try:
-                    model_output_timestep = model(validation_sequence)
+                model_output_timestep = model(validation_sequence)
+            
+                input_lengths = torch.tensor(X_val[i].shape[0])
+                target_lengths = torch.tensor(len(target_sequence))
                 
-                    input_lengths = torch.tensor(X_val[i].shape[0])
-                    target_lengths = torch.tensor(len(target_sequence))
-                    
-                    loss = ctc_loss(
-                        model_output_timestep, target_sequence, input_lengths, target_lengths)
+                loss = ctc_loss(
+                    model_output_timestep, target_sequence, input_lengths, target_lengths)
 
-                    gt_loss_arr = gt_loss(
-                        ctc_loss, model_output_timestep, y_train[i], payload_train[i],
-                        device, input_lengths)
+                gt_loss_arr = gt_loss(
+                    ctc_loss, model_output_timestep, y_val[i], payload_val[i],
+                    device, input_lengths)
 
-                    loss = loss + alpha*sum(gt_loss_arr)
+                loss = loss + alpha * sum(gt_loss_arr)
 
-                    greedy_transcript, actual_transcript, payload_transcript, target_metrics,
-                    payload_metrics = get_metrics_for_evaluation(
-                        greedy_decoder, model_output_timestep, target_sequence,
-                        payload_sequence, loss, gt_loss_arr)
-                    
-                    val_loss += loss.item()
+                greedy_transcript, actual_transcript, payload_transcript, target_metrics,
+                payload_metrics = get_metrics_for_evaluation(
+                    greedy_decoder, model_output_timestep, target_sequence,
+                    payload_sequence, loss, gt_loss_arr)
+                
+                val_loss += loss.item()
 
-                    target_metrics_arr.append(target_metrics)
-                    payload_metrics_arr.append(payload_metrics)
-                        
-                except Exception as e:
-                    with open(file_write_path, 'a') as f:
-                        f.write(f"\nException ={e}")
-                    continue
+                target_metrics_arr.append(target_metrics)
+                payload_metrics_arr.append(payload_metrics)
                 
             val_loss /= len(X_val)
             target_metrics = np.mean(np.array(target_metrics_arr), axis=0)

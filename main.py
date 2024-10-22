@@ -44,7 +44,7 @@ if __name__ == '__main__':
     else:
         model_save_path = 'model.pth'
         test_data_path = 'sampled_test_dataset_v4_spacers.pkl'
-        model_path = 'model.pth'
+        model_path = 'model_underfit.pth'
         saved_model = False
         file_write_path = 'training_logs.txt'
 
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         saved_model,
         file_write_path)
 
-    X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, test_X, test_y, test_payload, payload_val, model, optimizer = prepare_data_for_training(dataset_path, sample)
+    X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test,payload_val, test_X, test_y, test_payload, model, optimizer = prepare_data_for_training(dataset_path, sample)
 
     model = train_model(
         X_train, X_val, y_train, y_val, payload_train, payload_val, test_X, test_y, test_payload, epochs, model,

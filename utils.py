@@ -46,7 +46,7 @@ def get_motifs_identified(target_sequence, decoded_sequence, n_motifs=19):
 
     for i in range(len(target_cycles)):
         found_motifs_arr = [motif for motif in payload_cycles[i] if motif in target_cycles[i]]
-        motif_errors = [motif for motif in payload_cycles[i] if i not in target_cycles[i]]
+        motif_errors = [motif for motif in payload_cycles[i] if motif not in target_cycles[i]]
 
         n_motifs += len(target_cycles[i])
         found_motifs += len(found_motifs_arr)
@@ -58,10 +58,19 @@ def get_motifs_identified(target_sequence, decoded_sequence, n_motifs=19):
             payload_err += len(motif_errors) / len(target_cycles[i])
 
     # Let's do motif errors per found motif
-    motif_acc_cycle = found_motifs/n_motifs
-    motif_err_cycle = motif_errs/n_motifs
-    motif_acc_payload = payload_acc/n_cycles
-    motif_err_payload = payload_err/n_cycles
+    if n_motifs > 0:
+        motif_acc_cycle = found_motifs/n_motifs
+        motif_err_cycle = motif_errs/n_motifs
+    else:
+        motif_acc_cycle = 0.0
+        motif_err_cycle = 0.0
+
+    if n_cycles > 0:
+        motif_acc_payload = payload_acc/n_cycles
+        motif_err_payload = payload_err/n_cycles
+    else:
+        motif_acc_payload = 0.0
+        motif_err_payload = 0.0
 
     return (motif_acc_cycle, motif_err_cycle, motif_acc_payload, motif_err_payload)
 
@@ -162,32 +171,32 @@ def display_metrics(
 
         if type == 0:  # Train
             f.write(
-                f"\nEpoch {epoch} Batch {batch} Loss {loss}")
+                f"\nEpoch {epoch} \nBatch {batch} \nLoss {loss}\n")
             print(
-                f"\nEpoch {epoch} Batch {batch} Loss {loss}")
+                f"\nEpoch {epoch} \nBatch {batch} \nLoss {loss}\n")
             
         elif type == 1:  # Validation
             f.write(
-                f"\nValidation Epoch {epoch} Loss {loss}")
+                f"\nValidation Epoch {epoch} \nLoss {loss}\n")
             print(
-                f"\nValidation Epoch {epoch} Loss {loss}")
+                f"\nValidation Epoch {epoch} \nLoss {loss}\n")
         elif type == 2:  # Test
             f.write(
-                f"\nTest Loss {loss}")
+                f"\nTest Loss {loss}\n")
             print(
-                f"\nTest Loss {loss}")
+                f"\nTest Loss {loss}\n")
             
         else:  # Unseen Data
             f.write(
-                f"\nUnseen Data Loss {loss}")
+                f"\nUnseen Data Loss {loss}\n")
             print(
-                f"\nUnseen Data Loss {loss}")
+                f"\nUnseen Data Loss {loss}\n")
 
-        f.write(f"Payload Transcript - {payload_transcript}")
-        f.write(f"Actual Transcript -{actual_transcript}")
-        f.write(f"Greedy Transcript  - {greedy_transcript}")
-        f.write(f"Motif Acc/Err Cycle/Payload Target Seq - {target_metrics}")
-        f.write(f"Motif Acc/Err Cycle/Payload Payload Seq - {payload_metrics}")
+        f.write(f"Payload Transcript - {payload_transcript}\n")
+        f.write(f"Actual Transcript -{actual_transcript}\n")
+        f.write(f"Greedy Transcript  - {greedy_transcript}\n")
+        f.write(f"Motif Acc/Err Cycle/Payload Target Seq - {target_metrics}\n")
+        f.write(f"Motif Acc/Err Cycle/Payload Payload Seq - {payload_metrics}\n")
 
     print(f"Payload - {payload_transcript}")
     print(f"Actual Transcript -{actual_transcript}")
