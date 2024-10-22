@@ -2,8 +2,7 @@
 import argparse
 import os
 from training_loop_functions import prepare_data_for_training, train_model, test_model, set_variables
-import uuid
-
+from datetime import datetime
 
 parser = argparse.ArgumentParser(
                     prog='Motif Caller',
@@ -30,7 +29,9 @@ if __name__ == '__main__':
     cluster = args.cluster
 
     if cluster:
-        uid = uuid.uuid4()
+        uid = str(datetime.datetime.now()).replace(' ', '.').replace('-','').replace(':',"")
+        uid += f'-alpha_{alpha}_epochs_{epochs}'
+
         savepath = os.path.join(os.environ['HOME'], os.path.join("training_logs", f"{uid}"))
         os.mkdir(savepath)
 
