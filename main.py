@@ -38,7 +38,10 @@ if __name__ == '__main__':
         model_save_path = os.path.join(savepath, "model.pth")
         file_write_path = os.path.join(savepath, "log.txt")
         test_data_path = os.path.join(os.environ['HOME'], "sampled_test_dataset_v4_spacers.pkl")
-        dataset_path = os.path.join(os.environ['HOME'], 'empirical_train_dataset_v6.pkl')
+        
+        if not dataset_path:
+          dataset_path = os.path.join(os.environ['HOME'], 'empirical_train_dataset_v6.pkl')
+        
         model_path = ""
         saved_model = False
     else:
