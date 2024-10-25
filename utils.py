@@ -58,9 +58,9 @@ def get_motifs_identified(target_sequence, decoded_sequence, n_motifs=19):
             payload_err += len(motif_errors) / len(target_cycles[i])
 
     # Let's do motif errors per found motif
-    if n_motifs > 0:
+    if n_motifs > 0 and (found_motifs + motif_errs) > 0:
         motif_acc_cycle = found_motifs/n_motifs
-        motif_err_cycle = motif_errs/n_motifs
+        motif_err_cycle = motif_errs/(found_motifs + motif_errs)
     else:
         motif_acc_cycle = 0.0
         motif_err_cycle = 0.0
@@ -206,7 +206,7 @@ def display_metrics(
 
 
 def get_metrics_for_evaluation(
-        greedy_decoder, model_output_timestep, target_sequence, payload_sequence, loss, gt_loss_arr):
+        greedy_decoder, model_output_timestep, target_sequence, payload_sequence, loss):
 
     greedy_result = greedy_decoder(model_output_timestep)
     greedy_transcript = " ".join(greedy_result)

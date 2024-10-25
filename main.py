@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(
                     epilog='Use parser to set some parameters for training')
 
 
-dataset_path_default = 'empirical_train_dataset_v5_payload_seq.pkl'
+dataset_path_default = r"C:\Users\Parv\Doc\HelixWorks\Basecalling\code\datasets\empirical\empirical_train_dataset_v6.pkl"
 
 parser.add_argument('--alpha', type=float, default=0.01, help='Parameter for ground truth loss')
 parser.add_argument('--epochs', type=int, default=50)

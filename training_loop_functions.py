@@ -31,7 +31,7 @@ greedy_decoder = GreedyCTCDecoder(labels=labels)
 file_write_path = "training_logs.txt"
 
 model_save_iterations = 5000
-display_iterations = 5000
+display_iterations = 10000
 
 # Model Parameters
 input_size = 1  # Number of input channels
@@ -123,16 +123,17 @@ def unseen_data_test_loop(test_X, test_y, test_payload, alpha, model):
             loss = ctc_loss(
                 model_output_timestep, target_sequence, input_lengths, target_lengths)
             
-            gt_loss_arr = gt_loss(
-                    ctc_loss, model_output_timestep, test_y[i],payload_str,
-                    device, input_lengths)
+            if alpha > 0:
+                gt_loss_arr = gt_loss(
+                        ctc_loss, model_output_timestep, test_y[i],payload_str,
+                        device, input_lengths)
 
-            loss = loss + alpha*sum(gt_loss_arr)
+                loss = loss + alpha*sum(gt_loss_arr)
 
             greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics = get_metrics_for_evaluation(
                         greedy_decoder,
                         model_output_timestep, target_sequence,
-                        payload_sequence, loss, gt_loss_arr)
+                        payload_sequence, loss)
                     
             test_loss += loss.item()
 
@@ -181,11 +182,13 @@ def train_model(
 
                 loss = ctc_loss(
                     model_output_timestep, target_sequence, input_lengths, target_lengths)
-                gt_loss_arr = gt_loss(
-                    ctc_loss, model_output_timestep, y_train[i], payload_train[i],
-                    device, input_lengths)
-                loss = loss + alpha*sum(gt_loss_arr)
                 
+                if alpha > 0:
+                    gt_loss_arr = gt_loss(
+                        ctc_loss, model_output_timestep, y_train[i], payload_train[i],
+                        device, input_lengths)
+                    loss = loss + alpha*sum(gt_loss_arr)
+                    
                 loss.backward()
                 optimizer.step()
 
@@ -199,7 +202,7 @@ def train_model(
             if i % display_iterations == 0:
                 
                 greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics = get_metrics_for_evaluation(
-                    greedy_decoder, model_output_timestep, target_sequence, payload_sequence, loss, gt_loss_arr)
+                    greedy_decoder, model_output_timestep, target_sequence, payload_sequence, loss)
                 display_metrics(
                     file_write_path, greedy_transcript, actual_transcript,
                     payload_transcript, target_metrics, payload_metrics,
@@ -234,17 +237,19 @@ def train_model(
                 
                 loss = ctc_loss(
                     model_output_timestep, target_sequence, input_lengths, target_lengths)
+                
+                if alpha > 0:
 
-                gt_loss_arr = gt_loss(
-                    ctc_loss, model_output_timestep, y_val[i], payload_val[i],
-                    device, input_lengths)
+                    gt_loss_arr = gt_loss(
+                        ctc_loss, model_output_timestep, y_val[i], payload_val[i],
+                        device, input_lengths)
 
-                loss = loss + alpha * sum(gt_loss_arr)
+                    loss = loss + alpha * sum(gt_loss_arr)
 
                 greedy_transcript, actual_transcript, payload_transcript, target_metrics,
                 payload_metrics = get_metrics_for_evaluation(
                     greedy_decoder, model_output_timestep, target_sequence,
-                    payload_sequence, loss, gt_loss_arr)
+                    payload_sequence, loss)
                 
                 val_loss += loss.item()
 
@@ -290,15 +295,16 @@ def test_model(model, X_test, y_test, payload_test, test_X, test_y, test_payload
             loss = ctc_loss(
                 model_output_timestep, target_sequence, input_lengths, target_lengths)
             
-            gt_loss_arr = gt_loss(
-                    ctc_loss, model_output_timestep, y_test[i], payload_test[i],
-                    device, input_lengths)
+            if alpha > 0:
+                gt_loss_arr = gt_loss(
+                        ctc_loss, model_output_timestep, y_test[i], payload_test[i],
+                        device, input_lengths)
 
-            loss = loss + alpha*sum(gt_loss_arr)
+                loss = loss + alpha*sum(gt_loss_arr)
 
             greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics = get_metrics_for_evaluation(
                         greedy_decoder, model_output_timestep, target_sequence,
-                        payload_sequence, loss, gt_loss_arr)
+                        payload_sequence, loss)
                     
             test_loss += loss.item()
 
