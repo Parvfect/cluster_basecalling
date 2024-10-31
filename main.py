@@ -19,7 +19,7 @@ parser.add_argument('--dataset_path', type=str, default=dataset_path_default)
 parser.add_argument('--sample_data', action='store_true', help="Sample the data")
 parser.add_argument('--cluster', action='store_true', help="Running on the cluster")
 
-parser.set_defaults(sample_data=False, cluster=False)
+parser.set_defaults(sample_data=False, cluster=True)
 
 args = parser.parse_args()
 
