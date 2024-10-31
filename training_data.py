@@ -43,8 +43,9 @@ def data_preproc(X, y, payload, chop_reads=1):
     # So we split and norm it
     sequences_dataset = []
     for i in tqdm(X):
-        #j = normalize([i]).flatten()
-        j = i
+        
+        j = normalize([i]).flatten()
+        #j = i
 
         sequence_length = len(j)
             
