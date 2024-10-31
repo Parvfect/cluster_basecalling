@@ -176,9 +176,9 @@ def train_model(
                 #model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
                 #stepper_size = (
                 #input_lengths + model_output_split_size - 1) // model_output_split_size
-
+                torch.no_grad()
                 model_output_timestep = model(training_sequence)
-
+                print("I reach ehre")
                 """
                 for j in range(0, input_lengths, stepper_size):
                     end_index = min(j + stepper_size, input_lengths)
