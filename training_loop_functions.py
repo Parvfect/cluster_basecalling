@@ -162,6 +162,8 @@ def train_model(
         model.train()
         for i in tqdm(range(len(X_train))):
 
+            print("i reach here")
+
             training_sequence = X_train[i].to(device)
             target_sequence = torch.tensor(y_train[i]).to(device)
             payload_sequence = torch.tensor(payload_train[i]).to(device)
@@ -171,17 +173,24 @@ def train_model(
             optimizer.zero_grad()
 
             try:
-                model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
-                stepper_size = (
+                #model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
+                #stepper_size = (
                     input_lengths + model_output_split_size - 1) // model_output_split_size
 
+                print("I reach here")
+                model_output_timestep = model(training_sequence)
+                print("I reach here")
+
+                """
                 for j in range(0, input_lengths, stepper_size):
                     end_index = min(j + stepper_size, input_lengths)
                     model_output_chunk = model(training_sequence[j:end_index])
                     model_output_timestep[j:end_index] = model_output_chunk
+                """
 
                 loss = ctc_loss(
                     model_output_timestep, target_sequence, input_lengths, target_lengths)
+                print("I reach here")
                 
                 if alpha > 0:
                     gt_loss_arr = gt_loss(
