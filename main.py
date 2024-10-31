@@ -15,11 +15,11 @@ dataset_path_default = r"C:\Users\Parv\Doc\HelixWorks\Basecalling\code\datasets\
 parser.add_argument('--alpha', type=float, default=0, help='Parameter for ground truth loss')
 parser.add_argument('--epochs', type=int, default=50)
 # parser.add_argument('--infere nce', type=bool, default=False)
-parser.add_argument('--dataset_path', type=str, default=dataset_path_default)
+parser.add_argument('--dataset_path', type=str)
 parser.add_argument('--sample_data', action='store_true', help="Sample the data")
 parser.add_argument('--cluster', action='store_true', help="Running on the cluster")
 
-parser.set_defaults(sample_data=False, cluster=True)
+parser.set_defaults(sample_data=False, cluster=False)
 
 args = parser.parse_args()
 
