@@ -162,8 +162,6 @@ def train_model(
         model.train()
         for i in tqdm(range(len(X_train))):
 
-            print("i reach here")
-
             training_sequence = X_train[i].to(device)
             target_sequence = torch.tensor(y_train[i]).to(device)
             payload_sequence = torch.tensor(payload_train[i]).to(device)
@@ -176,7 +174,8 @@ def train_model(
                 #model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
                 #stepper_size = (
                 #input_lengths + model_output_split_size - 1) // model_output_split_size
-                torch.no_grad()
+
+                
                 model_output_timestep = model(training_sequence)
                 print("I reach ehre")
                 """
