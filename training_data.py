@@ -58,9 +58,7 @@ def data_preproc(X, y, payload, chop_reads=1):
             
             try:
                 if ptr + length_per_sample > sequence_length:
-                    sequence_chop = j[ptr:-1] # For when the window has crossed the end
-                    pad = np.zeros(length_per_sample - (sequence_length-ptr) + 1)
-                    sequence_chop = np.concatenate((sequence_chop, pad)).tolist()
+                    break
                 else:
                     sequence_chop = j[ptr:ptr+length_per_sample]
                     
