@@ -65,9 +65,9 @@ X_train, X_test, payload_train, payload_test = train_test_split(X, payload_label
 X_train, X_val, payload_train, payload_val = train_test_split(X_train, payload_train, test_size=0.25, random_state=1) 
 
 n_classes = output_classes
-step_sequence = 100
-window_overlap = 50
-length_per_sample = 150
+step_sequence = 10
+window_overlap = 5
+length_per_sample = 15
 
 epochs = 35
 model_output_split_size = 1
