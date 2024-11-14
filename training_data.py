@@ -9,7 +9,8 @@ import math
 import os
 import pickle
 
-def load_training_data(dataset_path=None, column='Spacer_Sequence', sample=False):
+def load_training_data(
+    dataset_path=None, column_x='Squiggle', column_y='Bases', sample=False, payload=False):
 
     if not dataset_path:
         dataset_path = os.path.join(os.environ['HOME'], "empirical_train_dataset_v5_payload_seq.pkl")
@@ -19,63 +20,48 @@ def load_training_data(dataset_path=None, column='Spacer_Sequence', sample=False
     if sample:
         dataset = dataset.sample(frac=0.005, random_state=1)
     
-    X = dataset['squiggle'].to_numpy().tolist()
+    X = dataset[column_x].to_numpy().tolist()
+    y = dataset[column_y].to_numpy()
 
-    payload = dataset['Payload_Sequence'].to_numpy()
-
-    y = dataset[column].to_numpy()
-
-    return X, y, payload
+    if payload:
+        payload = dataset['Payload_Sequence'].to_numpy()
+        return X, y, payload
+    
+    return X, y
        
 
-def data_preproc(X, y, payload, chop_reads=1):
-    
-    n_classes = 10
-    step_sequence = 100
-    window_overlap = 50
-    length_per_sample = 150
-
-    if chop_reads < 1:
-      y = y[:int(len(X)*chop_reads)]
-      X = X[:int(len(X)*chop_reads)]
-      payload = payload[:int(len(X)*chop_reads)]
+def data_preproc(X, window_size=150, step_size=100):
+    """
+    Splits each long read of the dataset into n windows determined by the window and step size. 
+    """
 
     # So we split and norm it
     sequences_dataset = []
     for i in tqdm(X):
         
-        j = normalize([i]).flatten()
-        #j = i
-
+        j = normalize([i]).flatten() # Gotta get rid of this
         sequence_length = len(j)
-            
-        n_samples = math.ceil(sequence_length/step_sequence) # Since we send the last one even if it is small as can be
+        n_samples = math.floor(sequence_length / step_size) # Since we don't send the last one if it is beyond the total size
+        ptr, counter = 0, 0
+        sequences = torch.zeros([n_samples, 1, window_size])
 
-        ptr = 0
-        counter = 0
-        sequences = torch.zeros([n_samples, 1, length_per_sample])
+        # Chop the sequences into windows of length window size and with an overlap of window_size - step_size
         while ptr <= sequence_length:
-            
             try:
-                if ptr + length_per_sample > sequence_length:
-                    sequence_chop = j[ptr:-1] # For when the window has crossed the end
-                    pad = np.zeros(length_per_sample - (sequence_length-ptr) + 1)
-                    sequence_chop = np.concatenate((sequence_chop, pad)).tolist()
+                if ptr + window_size > sequence_length:
+                    break  # Don't pad
                 else:
-                    sequence_chop = j[ptr:ptr+length_per_sample]
-                    
+                    sequence_chop = j[ptr: ptr + window_size]
+            
                 sequence_chop = torch.tensor(sequence_chop, dtype=torch.float32).view(1, len(sequence_chop))
-
                 sequences[counter] = sequence_chop
+            
             except IndexError:
                 continue
                 
-            
-            ptr += step_sequence
+            ptr += step_size
             counter+=1
         
         sequences_dataset.append(sequences)
         
-         
-    return sequences_dataset, y, payload
-
+    return sequences_dataset

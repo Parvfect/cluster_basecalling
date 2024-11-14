@@ -164,8 +164,8 @@ def gt_loss(
 
 
 def display_metrics(
-        file_write_path, greedy_transcript, actual_transcript, payload_transcript, target_metrics,
-        payload_metrics, loss, type=0, epoch=None, batch=None):
+        file_write_path, greedy_transcript, actual_transcript, target_metrics,
+        loss, payload_transcript=None, payload_metrics=None, type=0, epoch=None, batch=None):
 
     with open(file_write_path, 'a') as f:
 
@@ -206,17 +206,18 @@ def display_metrics(
 
 
 def get_metrics_for_evaluation(
-        greedy_decoder, model_output_timestep, target_sequence, payload_sequence, loss):
+        greedy_decoder, model_output_timestep, target_sequence, loss, payload_sequence=None):
 
     greedy_result = greedy_decoder(model_output_timestep)
     greedy_transcript = " ".join(greedy_result)
     actual_transcript = get_actual_transcript(target_sequence)
-    payload_transcript = get_actual_transcript(payload_sequence)
-
     target_metrics = get_motifs_identified(
         actual_transcript, greedy_transcript)
 
-    payload_metrics = get_motifs_identified(
-        payload_transcript, greedy_transcript)
-
-    return greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics
+    if payload_sequence:
+        payload_transcript = get_actual_transcript(payload_sequence)
+        payload_metrics = get_motifs_identified(
+            payload_transcript, greedy_transcript)
+        return greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics
+    
+    return greedy_transcript, actual_transcript, target_metrics
