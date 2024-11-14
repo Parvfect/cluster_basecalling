@@ -65,29 +65,36 @@ if __name__ == '__main__':
         file_write_path)
 
     if payload_flag and unseen_data_flag:
-        X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test,payload_val, test_X, test_y, test_payload, model, optimizer = prepare_data_for_training(dataset_path, sample, payload_flag=payload_flag, unseen_data_flag=unseen_data_flag)
+        X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, payload_val, test_X, test_y, test_payload, model, optimizer = prepare_data_for_training(dataset_path, sample, payload_flag=payload_flag, unseen_data_flag=unseen_data_flag)
+
         model = train_model(
         X_train, X_val, y_train, y_val, epochs, model, optimizer, payload_train, payload_val, test_X, test_y, test_payload, alpha, payload_flag=True, unseen_data_flag=True)
+
         test_model(model, X_test, y_test, payload_test, test_X, test_y, test_payload, alpha, payload_flag=True, unseen_data_flag=True)
     
     elif payload_flag:
         X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, payload_val, model, optimizer = prepare_data_for_training(dataset_path, sample, payload_flag=payload_flag)
+
         model = train_model(
         X_train, X_val, y_train, y_val, epochs, model, optimizer, payload_train, payload_test, payload_val, alpha=alpha, payload_flag=True)
         test_model(model, X_test, y_test, payload_test, alpha, payload_flag=True)
 
     elif unseen_data_flag:
-        X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, payload_val, model, optimizer = prepare_data_for_training(dataset_path, sample, payload_flag=payload_flag)
+        X_train, X_test, X_val, y_train, y_test, y_train, y_val, test_X, test_y, test_payload, model, optimizer = prepare_data_for_training(dataset_path, sample, payload_flag=payload_flag)
         model = train_model(
-        X_train, X_val, y_train, y_val, payload_train, payload_val, epochs, model,
-        optimizer, alpha)
+        X_train, X_val, y_train, y_val, epochs, model,
+        optimizer, alpha,
+        test_X=test_X, test_y=test_y, test_payload=test_payload)
+
+        test_model(model, X_test, y_test, test_X=test_X, alpha=alpha)
 
     else:
+        X_train, X_test, X_val, y_train, y_test, y_train, y_val, model, optimizer =  prepare_data_for_training(dataset_path, sample, payload_flag=payload_flag, unseen_data_flag=unseen_data_flag)
 
-    model = train_model(
-        X_train, X_val, y_train, y_val, payload_train, payload_val, test_X, test_y, test_payload, epochs, model,
-        optimizer, alpha)
+        model = train_model(
+            X_train, X_val, y_train, y_val, epochs, model,
+            optimizer, alpha)
     
-    test_model(model, X_test, y_test, payload_test, test_X, test_y, test_payload, alpha)
+        test_model(model, X_test, y_test, alpha)
 
 
