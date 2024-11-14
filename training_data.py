@@ -19,13 +19,13 @@ def load_training_data(dataset_path=None, column='Spacer_Sequence', sample=False
     if sample:
         dataset = dataset.sample(frac=0.005, random_state=1)
     
-    X = dataset['squiggle'].to_numpy().tolist()
+    X = dataset['Squiggle'].to_numpy().tolist()
 
-    payload = dataset['Payload_Sequence'].to_numpy()
+    #payload = dataset['Payload_Sequence'].to_numpy()
 
     y = dataset[column].to_numpy()
 
-    return X, y, payload
+    return X, y#, payload
        
 
 def data_preproc(X, y, payload, chop_reads=1):
