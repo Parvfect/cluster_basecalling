@@ -51,7 +51,7 @@ step_sequence = 5
 window_overlap = 3
 length_per_sample = 8
 
-epochs = 5
+epochs = 50
 model_output_split_size = 1
 
 dataset_path = os.path.join(os.environ['HOME'], "synthetic_base_level.pkl")
