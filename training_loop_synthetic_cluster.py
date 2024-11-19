@@ -30,6 +30,7 @@ labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
 greedy_decoder = GreedyCTCDecoder(labels=labels)
 
 model_save_iterations = 2000
+display_iterations = 500
 
 # Model Parameters
 input_size = 1  # Number of input channels
@@ -51,12 +52,25 @@ step_sequence = 5
 window_overlap = 3
 length_per_sample = 8
 
+#Motif level - comment out as needed
+step_sequence = 100
+window_overlap = 50
+length_per_sample = 150
+output_classes = 14 # including blank
+output_size = output_classes  # Number of output classes
+labels_int = np.arange(output_classes).tolist()
+labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
+greedy_decoder = GreedyCTCDecoder(labels=labels)
+
 epochs = 50
 model_output_split_size = 1
 
 dataset_path = os.path.join(os.environ['HOME'], "synthetic_base_level.pkl")
 
-X, y = load_training_data(dataset_path=dataset_path, sample=False)
+
+# Currently at motif level
+X, y = load_training_data(dataset_path=dataset_path, sample=False, column_y='Motifs')
+
 
 X = data_preproc(X, window_size=length_per_sample, step_size=step_sequence)
 
@@ -78,49 +92,37 @@ if training_flag:
 
         for i in tqdm(range(len(X_train))):
 
-            target_sequence = torch.tensor(y_train[i]).to(device)
+            try:
+                training_sequence = X_train[i].to(device)
+                target_sequence = torch.tensor(y_train[i]).to(device)
 
-            input_lengths = torch.tensor(X_train[i].shape[0])
-            target_lengths = torch.tensor(len(target_sequence))
-
-            # Zero out the gradients
-            optimizer.zero_grad()
-
-            #try:        
-            
-            # Give the model the input in chunks based on the model_output_split_size flag
-            model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
-            stepper_size = (input_lengths + model_output_split_size - 1) // model_output_split_size  # Adjust stepper_size to cover all elements
-
-            for j in range(0, input_lengths, stepper_size):
-                end_index = min(j + stepper_size, input_lengths)
-                training_sequence = X_train[i][j:end_index].to(device)
                 
-                # Get the model output for the current chunk
-                model_output_chunk = model(training_sequence)
-                
-                # Ensure the sizes match before assignment
-                model_output_timestep[j:end_index] = model_output_chunk
+                input_lengths = torch.tensor(X_train[i].shape[0])
+                target_sequence = torch.tensor(y_train[i]).to(device)
 
-            loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+                input_lengths = torch.tensor(X_train[i].shape[0])
+                target_lengths = torch.tensor(len(target_sequence))
 
-            # Training on ground truth
-            loss.backward()
-            # Update the weights
-            optimizer.step()
+                # Zero out the gradients
+                optimizer.zero_grad()
 
-            """
+                model_output_timestep = model(training_sequence)
+                loss = ctc_loss(model_output_timestep, target_sequence, input_lengths, target_lengths)
+
+                # Training on ground truth
+                loss.backward()
+                # Update the weights
+                optimizer.step()
+
             except Exception as e:
                 print(e)
                 with open(file_write_path, 'a') as f:
                     f.write(f"\nException ={e}")
-                    f.write(f"\nModel Output split size = {model_output_split_size}, {stepper_size}")
-                model_output_split_size+=1
-                continue
-            """
+                    print(target_sequence)
+                    continue
                
 
-            if i % 5000 == 0:
+            if i % display_iterations == 0:
                 greedy_result = greedy_decoder(model_output_timestep)
                 greedy_transcript = " ".join(greedy_result)
                 actual_transcript = get_actual_transcript(target_sequence)
@@ -134,11 +136,11 @@ if training_flag:
 
 
                 with open(file_write_path, 'a') as f:
-                    f.write(f"\nEpoch {epoch} Batch {i} Main Loss {loss.item()} ")
-                    f.write(f"Transcript: {greedy_transcript}")
-                    f.write(f"Actual Transcript: {actual_transcript}")
-                    f.write(f"Sequence edit distance: {motif_err}")
-                    f.write(f"Motifs Identified: {motifs_identifed}")
+                    f.write(f"\nEpoch {epoch} Batch {i} Main Loss {loss.item()} \n")
+                    f.write(f"Transcript: {greedy_transcript}\n")
+                    f.write(f"Actual Transcript: {actual_transcript}\n")
+                    f.write(f"Sequence edit distance: {motif_err}\n")
+                    f.write(f"Motifs Identified: {motifs_identifed}\n")
                 
 
                 
@@ -206,7 +208,10 @@ with torch.no_grad():
 
         test_sequence, target_sequence = torch.tensor(X_test[i]).to(device), torch.tensor(y_test[i]).to(device)
 
-        model_output_timestep = model(test_sequence) # Getting model output
+        try:
+            model_output_timestep = model(test_sequence) # Getting model output
+        except:
+            continue
 
         input_lengths = torch.tensor(X_test[i].shape[0])
         target_lengths = torch.tensor(len(target_sequence))
