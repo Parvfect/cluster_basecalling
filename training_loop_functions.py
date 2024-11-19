@@ -21,7 +21,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.set_default_device(device)
 print(f"Running on {device}")
 
-output_classes = 19 # including blank
+output_classes = 5 # including blank
 
 labels_int = np.arange(output_classes).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
@@ -45,9 +45,9 @@ alpha = 0.02
 model_path = "model_underfit.pth"
 test_data_path = 'sampled_test_dataset_v4_spacers.pkl'
 n_classes = output_classes
-step_sequence = 100
-window_overlap = 50
-length_per_sample = 150
+step_sequence = 10
+window_overlap = 5
+length_per_sample = 15
 ctc_loss = nn.CTCLoss(
     blank=0, reduction='mean', zero_infinity=True)
 
@@ -82,7 +82,7 @@ def prepare_data_for_training(dataset_path, sample, payload_flag=False, unseen_d
     else:
         X, y = load_training_data(dataset_path=dataset_path, sample=sample)
     
-    X = data_preproc(X, window_size=10, step_size=5, chop_reads=1)
+    X = data_preproc(X, window_size=10, step_size=5)
 
     # Creating Train, Test, Validation sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -100,7 +100,7 @@ def prepare_data_for_training(dataset_path, sample, payload_flag=False, unseen_d
         test_y = unseen_data['Spacer_Sequence'].to_numpy()
         test_payload = unseen_data['Payload'].to_numpy()
 
-        test_X, test_y, test_payload = data_preproc(test_X, test_y, test_payload, chop_reads=1)
+        test_X, test_y, test_payload = data_preproc(test_X, window_size=10, step_size=5)
 
     if payload_flag and unseen_data_flag:
         return X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, payload_val, test_X, test_y, test_payload, model, optimizer
