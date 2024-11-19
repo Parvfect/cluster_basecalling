@@ -43,7 +43,7 @@ saved_model = True
 save_model = True
 alpha = 0.02
 model_path = "model_underfit.pth"
-test_data_path = 'sampled_test_dataset_v4_spacers.pkl'
+#test_data_path = 'sampled_test_dataset_v4_spacers.pkl'
 n_classes = output_classes
 step_sequence = 10
 window_overlap = 5
@@ -190,14 +190,19 @@ def train_model(
             optimizer.zero_grad()
 
             try:
-                model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
-                stepper_size = (
-                    input_lengths + model_output_split_size - 1) // model_output_split_size
+                #model_output_timestep = torch.zeros([input_lengths, output_size]).to(device)
+                #stepper_size = (
+                #input_lengths + model_output_split_size - 1) // model_output_split_size
 
+                
+                model_output_timestep = model(training_sequence)
+                print("I reach ehre")
+                """
                 for j in range(0, input_lengths, stepper_size):
                     end_index = min(j + stepper_size, input_lengths)
                     model_output_chunk = model(training_sequence[j:end_index])
                     model_output_timestep[j:end_index] = model_output_chunk
+                """
 
                 loss = ctc_loss(
                     model_output_timestep, target_sequence, input_lengths, target_lengths)

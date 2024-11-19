@@ -23,17 +23,11 @@ def load_training_data(
     X = dataset[column_x].to_numpy().tolist()
     y = dataset[column_y].to_numpy()
     
-    bases = {'A': 1, "C": 2, "T": 3, "G": 4}
-
-    # Making sure the label is a list sequence and not  a string
-    if type(y[0]) == str:
-        y = [list(i) for i in y]
-        y = [[bases[base] for base in i] for i in y]
 
     if payload:
         payload = dataset['Payload_Sequence'].to_numpy()
         return X, y, payload
-    
+      
     return X, y
        
 
@@ -49,7 +43,6 @@ def data_preproc(X, window_size=150, step_size=100):
         #j = normalize([seq]).flatten()  # Consider vectorized normalization
         j = seq
         sequence_length = len(j)
-        
         # Calculate start indices for all windows
         start_indices = range(0, sequence_length - window_size + 1, step_size)
         windows = [j[start:start + window_size] for start in start_indices]

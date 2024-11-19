@@ -15,7 +15,7 @@ dataset_path_default = r"C:\Users\Parv\Doc\HelixWorks\Basecalling\cycle_dataset\
 parser.add_argument('--alpha', type=float, default=0, help='Parameter for ground truth loss')
 parser.add_argument('--epochs', type=int, default=50)
 # parser.add_argument('--infere nce', type=bool, default=False)
-parser.add_argument('--dataset_path', type=str, default=dataset_path_default)
+parser.add_argument('--dataset_path', type=str)
 parser.add_argument('--sample_data', action='store_true', help="Sample the data")
 parser.add_argument('--cluster', action='store_true', help="Running on the cluster")
 parser.add_argument('--payload_flag', action='store_true', help="Extract payload from dataset")
