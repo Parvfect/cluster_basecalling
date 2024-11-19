@@ -21,7 +21,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.set_default_device(device)
 print(f"Running on {device}")
 
-output_classes = 19 # including blank
+output_classes = 5 # including blank
 
 labels_int = np.arange(output_classes).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
@@ -45,9 +45,9 @@ alpha = 0.02
 model_path = "model_underfit.pth"
 #test_data_path = 'sampled_test_dataset_v4_spacers.pkl'
 n_classes = output_classes
-step_sequence = 100
-window_overlap = 50
-length_per_sample = 150
+step_sequence = 10
+window_overlap = 5
+length_per_sample = 15
 ctc_loss = nn.CTCLoss(
     blank=0, reduction='mean', zero_infinity=True)
 
@@ -64,7 +64,7 @@ def set_variables(msp, tdp, mp, sm, fwp):
     file_write_path = fwp
     
 
-def prepare_data_for_training(dataset_path, sample):
+def prepare_data_for_training(dataset_path, sample, payload_flag=False, unseen_data_flag=False):
 
     # Model Definition
     model = CNN_BiGRU_Classifier(
@@ -77,26 +77,41 @@ def prepare_data_for_training(dataset_path, sample):
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
-    X, y, payload_label = load_training_data(dataset_path, sample=sample)
-    X, y, payload_label = data_preproc(X, y, payload_label, chop_reads=1)
+    if payload_flag:
+        X, y, payload_label = load_training_data(dataset_path, sample=sample, payload=True)
+    else:
+        X, y = load_training_data(dataset_path=dataset_path, sample=sample)
+    
+    X = data_preproc(X, window_size=10, step_size=5)
 
     # Creating Train, Test, Validation sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     X_train, X_val, y_train, y_val = train_test_split(
         X_train, y_train, test_size=0.10, random_state=1) 
 
-    X_train, X_test, payload_train, payload_test = train_test_split(X, payload_label, test_size=0.2, random_state=42)
-    X_train, X_val, payload_train, payload_val = train_test_split(X_train, payload_train, test_size=0.10, random_state=1)
+    if payload_flag:
+        X_train, X_test, payload_train, payload_test = train_test_split(X, payload_label, test_size=0.2, random_state=42)
+        X_train, X_val, payload_train, payload_val = train_test_split(X_train, payload_train, test_size=0.10, random_state=1)
 
-    unseen_data = pd.read_pickle(test_data_path)
-    unseen_data = unseen_data.sample(frac=0.01, random_state=1)
-    test_X = unseen_data['squiggle'].to_numpy()
-    test_y = unseen_data['Spacer_Sequence'].to_numpy()
-    test_payload = unseen_data['Payload'].to_numpy()
+    if unseen_data_flag:
+        unseen_data = pd.read_pickle(test_data_path)
+        unseen_data = unseen_data.sample(frac=0.01, random_state=1)
+        test_X = unseen_data['squiggle'].to_numpy()
+        test_y = unseen_data['Spacer_Sequence'].to_numpy()
+        test_payload = unseen_data['Payload'].to_numpy()
 
-    test_X, test_y, test_payload = data_preproc(test_X, test_y, test_payload, chop_reads=1)
+        test_X, test_y, test_payload = data_preproc(test_X, window_size=10, step_size=5)
 
-    return X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, payload_val, test_X, test_y, test_payload, model, optimizer
+    if payload_flag and unseen_data_flag:
+        return X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, payload_val, test_X, test_y, test_payload, model, optimizer
+
+    elif payload_flag:
+        return X_train, X_test, X_val, y_train, y_test, y_train, y_val, payload_train, payload_test, payload_val, model, optimizer
+    
+    elif unseen_data_flag:
+        return X_train, X_test, X_val, y_train, y_test, y_train, y_val, test_X, test_y, test_payload, model, optimizer
+
+    return X_train, X_test, X_val, y_train, y_test, y_train, y_val, model, optimizer
 
 def unseen_data_test_loop(test_X, test_y, test_payload, alpha, model):
     
@@ -153,8 +168,9 @@ def unseen_data_test_loop(test_X, test_y, test_payload, alpha, model):
 
 
 def train_model(
-        X_train, X_val, y_train, y_val, payload_train, payload_val, test_X, test_y, test_payload, epochs, model,
-        optimizer, alpha):
+        X_train, X_val, y_train, y_val, epochs, model,
+        optimizer, payload_train=None, payload_val=None, test_X=None, test_y=None, test_payload=None, alpha=0,
+        payload_flag=False, unseen_data_flag=False):
 
     model_output_split_size = 1
     for epoch in range(epochs):
@@ -164,7 +180,10 @@ def train_model(
 
             training_sequence = X_train[i].to(device)
             target_sequence = torch.tensor(y_train[i]).to(device)
-            payload_sequence = torch.tensor(payload_train[i]).to(device)
+
+            if payload_flag:
+                payload_sequence = torch.tensor(payload_train[i]).to(device)
+            
             input_lengths = torch.tensor(X_train[i].shape[0])
             target_lengths = torch.tensor(len(target_sequence))
 
@@ -188,7 +207,7 @@ def train_model(
                 loss = ctc_loss(
                     model_output_timestep, target_sequence, input_lengths, target_lengths)
                 
-                if alpha > 0:
+                if alpha > 0 and payload_flag:
                     gt_loss_arr = gt_loss(
                         ctc_loss, model_output_timestep, y_train[i], payload_train[i],
                         device, input_lengths)
@@ -206,12 +225,22 @@ def train_model(
             
             if i % display_iterations == 0:
                 
-                greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics = get_metrics_for_evaluation(
-                    greedy_decoder, model_output_timestep, target_sequence, payload_sequence, loss)
-                display_metrics(
+                if payload_flag:
+                    greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics = get_metrics_for_evaluation(
+                        greedy_decoder, model_output_timestep, target_sequence, loss, payload_sequence)
+                    
+                    display_metrics(
                     file_write_path, greedy_transcript, actual_transcript,
-                    payload_transcript, target_metrics, payload_metrics,
-                    loss, type=0, epoch=epoch, batch=i)
+                    target_metrics, loss, payload_transcript, payload_metrics,
+                    type=0, epoch=epoch, batch=i)
+                    
+                else:
+                    greedy_transcript, actual_transcript, target_metrics = get_metrics_for_evaluation(
+                        greedy_decoder, model_output_timestep, target_sequence, loss)
+                    
+                    display_metrics(
+                        file_write_path, greedy_transcript, actual_transcript,
+                        target_metrics, loss, type=0, epoch=epoch, batch=i)
                 
             if save_model:
                 if i % model_save_iterations == 0:
@@ -233,7 +262,9 @@ def train_model(
 
                 validation_sequence = torch.tensor(X_val[i]).to(device)
                 target_sequence = torch.tensor(y_val[i]).to(device)
-                payload_sequence = torch.tensor(payload_val[i]).to(device)
+
+                if payload_flag:
+                    payload_sequence = torch.tensor(payload_val[i]).to(device)
 
                 model_output_timestep = model(validation_sequence)
             
@@ -243,39 +274,49 @@ def train_model(
                 loss = ctc_loss(
                     model_output_timestep, target_sequence, input_lengths, target_lengths)
                 
-                if alpha > 0:
+                if alpha > 0 and payload_flag:
 
                     gt_loss_arr = gt_loss(
                         ctc_loss, model_output_timestep, y_val[i], payload_val[i],
                         device, input_lengths)
 
                     loss = loss + alpha * sum(gt_loss_arr)
-
-                greedy_transcript, actual_transcript, payload_transcript, target_metrics,
-                payload_metrics = get_metrics_for_evaluation(
-                    greedy_decoder, model_output_timestep, target_sequence,
-                    payload_sequence, loss)
                 
                 val_loss += loss.item()
+
+                if payload_flag:
+                    greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics = get_metrics_for_evaluation(
+                        greedy_decoder, model_output_timestep, target_sequence, loss, payload_sequence)
+                    
+                else:
+                    greedy_transcript, actual_transcript, target_metrics = get_metrics_for_evaluation(
+                        greedy_decoder, model_output_timestep, target_sequence, loss)
 
                 target_metrics_arr.append(target_metrics)
                 payload_metrics_arr.append(payload_metrics)
                 
             val_loss /= len(X_val)
             target_metrics = np.mean(np.array(target_metrics_arr), axis=0)
-            payload_metrics = np.mean(np.array(target_metrics_arr), axis=0)
-            
-            display_metrics(
+
+            if payload_flag:
+                display_metrics(
                 file_write_path, greedy_transcript, actual_transcript,
-                payload_transcript, target_metrics, payload_metrics, val_loss,
-                type=1, epoch=epoch)
+                target_metrics, loss, payload_transcript, payload_metrics,
+                type=0, epoch=epoch, batch=i)
+                    
+            else:
+                display_metrics(
+                    file_write_path, greedy_transcript, actual_transcript,
+                    target_metrics, loss, type=0, epoch=epoch, batch=i)
             
-            unseen_data_test_loop(test_X, test_y, test_payload, alpha, model)
+            if unseen_data_flag:
+                unseen_data_test_loop(test_X, test_y, test_payload, alpha, model)
 
     return model
         
 
-def test_model(model, X_test, y_test, payload_test, test_X, test_y, test_payload, alpha):
+def test_model(model, X_test, y_test, payload_test=None, test_X=None, test_y=None, test_payload=None, alpha=0.0, 
+               payload_flag=False, unseen_data_flag=False):
 
     model.eval()
     test_loss = 0.0
@@ -290,9 +331,11 @@ def test_model(model, X_test, y_test, payload_test, test_X, test_y, test_payload
 
             test_sequence = torch.tensor(X_test[i]).to(device)
             target_sequence = torch.tensor(y_test[i]).to(device)
-            payload_sequence = torch.tensor(payload_test[i]).to(device)
 
-            model_output_timestep = model(test_sequence)  # Getting model output
+            if payload_flag:
+                payload_sequence = torch.tensor(payload_test[i]).to(device)
+
+            model_output_timestep = model(test_sequence)
 
             input_lengths = torch.tensor(X_test[i].shape[0])
             target_lengths = torch.tensor(len(target_sequence))
@@ -300,34 +343,41 @@ def test_model(model, X_test, y_test, payload_test, test_X, test_y, test_payload
             loss = ctc_loss(
                 model_output_timestep, target_sequence, input_lengths, target_lengths)
             
-            if alpha > 0:
+            if alpha > 0 and payload_flag:
                 gt_loss_arr = gt_loss(
                         ctc_loss, model_output_timestep, y_test[i], payload_test[i],
                         device, input_lengths)
 
                 loss = loss + alpha*sum(gt_loss_arr)
 
-            greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics = get_metrics_for_evaluation(
-                        greedy_decoder, model_output_timestep, target_sequence,
-                        payload_sequence, loss)
-                    
+
+            if payload_flag:
+                greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics = get_metrics_for_evaluation(
+                    greedy_decoder, model_output_timestep, target_sequence, loss, payload_sequence)  
+                payload_metrics_arr.append(payload_metrics)
+            else:
+                greedy_transcript, actual_transcript, target_metrics = get_metrics_for_evaluation(
+                    greedy_decoder, model_output_timestep, target_sequence, loss)
+                
             test_loss += loss.item()
 
             target_metrics_arr.append(target_metrics)
-            payload_metrics_arr.append(payload_metrics)
             
             test_loss += loss.item()
 
     test_loss /= len(X_test)
     target_metrics = np.mean(np.array(target_metrics_arr), axis=0)
-    payload_metrics = np.mean(np.array(target_metrics_arr), axis=0)
+
+    if payload_flag:
+        payload_metrics = np.mean(np.array(target_metrics_arr), axis=0)
         
     display_metrics(
         file_write_path, payload_transcript, actual_transcript,
         greedy_transcript, target_metrics, payload_metrics, test_loss,
         type=2)
     
-    unseen_data_test_loop(test_X, test_y, test_payload, alpha, model)
+    if unseen_data_flag:
+        unseen_data_test_loop(test_X, test_y, test_payload, alpha, model)
 
 
 

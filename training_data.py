@@ -9,7 +9,8 @@ import math
 import os
 import pickle
 
-def load_training_data(dataset_path=None, column='Spacer_Sequence', sample=False):
+def load_training_data(
+    dataset_path=None, column_x='Squiggle', column_y='Bases', sample=False, payload=False):
 
     if not dataset_path:
         dataset_path = os.path.join(os.environ['HOME'], "empirical_train_dataset_v5_payload_seq.pkl")
@@ -17,63 +18,37 @@ def load_training_data(dataset_path=None, column='Spacer_Sequence', sample=False
     dataset = pd.read_pickle(dataset_path)
 
     if sample:
-        dataset = dataset.sample(frac=0.005, random_state=1)
+        dataset = dataset.sample(frac=0.1, random_state=1)
     
-    X = dataset['Squiggle'].to_numpy().tolist()
+    X = dataset[column_x].to_numpy().tolist()
+    y = dataset[column_y].to_numpy()
+    
 
-    #payload = dataset['Payload_Sequence'].to_numpy()
-
-    y = dataset[column].to_numpy()
-
-    return X, y#, payload
+    if payload:
+        payload = dataset['Payload_Sequence'].to_numpy()
+        return X, y, payload
+      
+    return X, y
        
 
-def data_preproc(X, y, payload, chop_reads=1):
-    
-    n_classes = 10
-    step_sequence = 100
-    window_overlap = 50
-    length_per_sample = 150
+def data_preproc(X, window_size=150, step_size=100):
+    """
+    Splits each long read of the dataset into n windows determined by the window and step size. 
+    """
 
-    if chop_reads < 1:
-      y = y[:int(len(X)*chop_reads)]
-      X = X[:int(len(X)*chop_reads)]
-      payload = payload[:int(len(X)*chop_reads)]
-
-    # So we split and norm it
     sequences_dataset = []
-    for i in tqdm(X):
-        
-        j = normalize([i]).flatten()
-        #j = i
 
+    for seq in tqdm(X):
+        # Normalize and flatten sequence
+        #j = normalize([seq]).flatten()  # Consider vectorized normalization
+        j = seq
         sequence_length = len(j)
-            
-        n_samples = math.ceil(sequence_length/step_sequence) # Since we send the last one even if it is small as can be
+        # Calculate start indices for all windows
+        start_indices = range(0, sequence_length - window_size + 1, step_size)
+        windows = [j[start:start + window_size] for start in start_indices]
 
-        ptr = 0
-        counter = 0
-        sequences = torch.zeros([n_samples, 1, length_per_sample])
-        while ptr <= sequence_length:
-            
-            try:
-                if ptr + length_per_sample > sequence_length:
-                    break
-                else:
-                    sequence_chop = j[ptr:ptr+length_per_sample]
-                    
-                sequence_chop = torch.tensor(sequence_chop, dtype=torch.float32).view(1, len(sequence_chop))
-
-                sequences[counter] = sequence_chop
-            except IndexError:
-                continue
-                
-            
-            ptr += step_sequence
-            counter+=1
-        
+        # Convert to a PyTorch tensor in one step
+        sequences = torch.tensor(windows, dtype=torch.float32).unsqueeze(1)
         sequences_dataset.append(sequences)
-        
-         
-    return sequences_dataset, y, payload
 
+    return sequences_dataset

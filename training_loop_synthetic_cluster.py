@@ -15,21 +15,21 @@ from utils import get_actual_transcript, get_savepaths, get_motifs_identified, \
 import torchaudio
 import datetime
 import os
+from utils import get_savepaths
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.set_default_device(device)
 print(f"Running on {device}")
 
-output_classes = 19 # including blank
+output_classes = 5 # including blank
+
+model_save_path, file_write_path = get_savepaths()
 
 labels_int = np.arange(output_classes).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
 greedy_decoder = GreedyCTCDecoder(labels=labels)
 
-#model_save_path, file_write_path = get_savepaths()
-file_write_path = "training_logs.txt"
-
-model_save_iterations = 100
+model_save_iterations = 2000
 
 # Model Parameters
 input_size = 1  # Number of input channels
@@ -37,23 +37,14 @@ hidden_size = 256
 num_layers = 4
 output_size = output_classes  # Number of output classes
 dropout_rate = 0.2
-saved_model = True
+saved_model = False
 save_model = True
-model_save_path = 'model.pth'
 alpha = 0.001
 
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate).to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 ctc_loss = nn.CTCLoss(blank=0, reduction='mean', zero_infinity=True)
-
-model_path = "model_underfit.pth"
-
-# Loading model
-if saved_model:
-    checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
 n_classes = output_classes
 step_sequence = 5
@@ -63,9 +54,9 @@ length_per_sample = 8
 epochs = 5
 model_output_split_size = 1
 
-dataset_path = r"C:\Users\Parv\Doc\HelixWorks\Basecalling\cycle_dataset\short_read_dataset.pkl"
+dataset_path = os.path.join(os.environ['HOME'], "synthetic_base_level.pkl")
 
-X, y = load_training_data(dataset_path=dataset_path, sample=True)
+X, y = load_training_data(dataset_path=dataset_path, sample=False)
 
 X = data_preproc(X, window_size=length_per_sample, step_size=step_sequence)
 
@@ -87,7 +78,7 @@ if training_flag:
 
         for i in tqdm(range(len(X_train))):
 
-            training_sequence, target_sequence = X_train[i].to(device), torch.tensor(y_train[i]).to(device)
+            target_sequence = torch.tensor(y_train[i]).to(device)
 
             input_lengths = torch.tensor(X_train[i].shape[0])
             target_lengths = torch.tensor(len(target_sequence))
@@ -103,9 +94,10 @@ if training_flag:
 
             for j in range(0, input_lengths, stepper_size):
                 end_index = min(j + stepper_size, input_lengths)
+                training_sequence = X_train[i][j:end_index].to(device)
                 
                 # Get the model output for the current chunk
-                model_output_chunk = model(training_sequence[j:end_index])
+                model_output_chunk = model(training_sequence)
                 
                 # Ensure the sizes match before assignment
                 model_output_timestep[j:end_index] = model_output_chunk
@@ -128,17 +120,17 @@ if training_flag:
             """
                
 
-            if i % 100 == 0:
+            if i % 5000 == 0:
                 greedy_result = greedy_decoder(model_output_timestep)
                 greedy_transcript = " ".join(greedy_result)
                 actual_transcript = get_actual_transcript(target_sequence)
                 #actual_transcript = get_actual_transcript(payload_sequence)
                 motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
-                motifs_identifed = get_motifs_identified(actual_transcript,     greedy_transcript)
+                motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript, n_motifs=5)
 
-                print(f"Actual Transcript -{actual_transcript}")
-                print(f"Greedy Transcript  - {greedy_transcript}")
                 print(f"Motifs identified {motifs_identifed}")
+                print(motif_err)
+                print(loss)
 
 
                 with open(file_write_path, 'a') as f:
