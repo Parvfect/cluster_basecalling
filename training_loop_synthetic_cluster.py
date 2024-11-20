@@ -30,7 +30,7 @@ labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
 greedy_decoder = GreedyCTCDecoder(labels=labels)
 
 model_save_iterations = 2000
-display_iterations = 500
+display_iterations = 10000
 
 # Model Parameters
 input_size = 1  # Number of input channels
