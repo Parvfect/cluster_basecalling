@@ -41,12 +41,6 @@ dropout_rate = 0.2
 saved_model = False
 save_model = True
 alpha = 0.001
-
-# Model Definition
-model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate).to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
-ctc_loss = nn.CTCLoss(blank=0, reduction='mean', zero_infinity=True)
-
 n_classes = output_classes
 step_sequence = 5
 window_overlap = 3
@@ -61,6 +55,11 @@ output_size = output_classes  # Number of output classes
 labels_int = np.arange(output_classes).tolist()
 labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
 greedy_decoder = GreedyCTCDecoder(labels=labels)
+
+# Model Definition
+model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate).to(device)
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
+ctc_loss = nn.CTCLoss(blank=0, reduction='mean', zero_infinity=True)
 
 epochs = 50
 model_output_split_size = 1
