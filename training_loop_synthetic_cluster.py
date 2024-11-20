@@ -49,7 +49,7 @@ length_per_sample = 8
 #Motif level - comment out as needed
 step_sequence = 100
 window_overlap = 50
-length_per_sample = 150
+length_per_sample = 500
 output_classes = 14 # including blank
 output_size = output_classes  # Number of output classes
 labels_int = np.arange(output_classes).tolist()
