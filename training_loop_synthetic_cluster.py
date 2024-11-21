@@ -24,7 +24,9 @@ print(f"Running on {device}")
 model_save_path, file_write_path = get_savepaths()
 
 model_save_iterations = 2000
+
 display_iterations = 5000
+
 
 output_classes = 5 # including blank
 # Model Parameters
@@ -44,7 +46,7 @@ length_per_sample = 50
 #Motif level - comment out as needed
 step_sequence = 100
 window_overlap = 50
-length_per_sample = 150
+length_per_sample = 500
 output_classes = 14 # including blank
 output_size = output_classes  # Number of output classes
 """
