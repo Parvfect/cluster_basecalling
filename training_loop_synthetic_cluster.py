@@ -60,7 +60,7 @@ model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, d
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 ctc_loss = nn.CTCLoss(blank=0, reduction='mean', zero_infinity=True)
 
-epochs = 50
+epochs = 100
 model_output_split_size = 1
 
 dataset_path = os.path.join(os.environ['HOME'], "synth_dataset_short_base_level.pkl")
