@@ -15,19 +15,24 @@ from utils import get_actual_transcript, get_savepaths, get_motifs_identified, \
 import torchaudio
 import datetime
 import os
-from utils import get_savepaths
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.set_default_device(device)
 print(f"Running on {device}")
 
-model_save_path, file_write_path = get_savepaths()
+#model_save_path, file_write_path = get_savepaths()
+file_write_path = "training_logs.txt"
 
 model_save_iterations = 2000
-display_iterations = 5000
+display_iterations = 100
 
-output_classes = 5 # including blank
+
+output_classes = 5
 # Model Parameters
+step_sequence = 5
+length_per_sample = 50
+
+epochs = 50
 input_size = 1  # Number of input channels
 hidden_size = 128
 num_layers = 3
@@ -35,10 +40,8 @@ output_size = output_classes  # Number of output classes
 dropout_rate = 0.2
 saved_model = False
 save_model = True
-alpha = 0
-n_classes = output_classes
-step_sequence = 5
-length_per_sample = 50
+model_save_path = 'model_synthetic_local.pth'
+alpha = 0.001
 
 """
 #Motif level - comment out as needed
@@ -49,24 +52,30 @@ output_classes = 14 # including blank
 output_size = output_classes  # Number of output classes
 """
 
-labels_int = np.arange(output_classes).tolist()
-labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
-greedy_decoder = GreedyCTCDecoder(labels=labels)
 
 # Model Definition
 model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, dropout_rate).to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 ctc_loss = nn.CTCLoss(blank=0, reduction='mean', zero_infinity=True)
 
-epochs = 50
-model_output_split_size = 1
+model_path = "model_underfit.pth"
 
-dataset_path = os.path.join(os.environ['HOME'], "synth_dataset_short_base_level.pkl")
+# Loading model
+if saved_model:
+    checkpoint = torch.load(model_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
+
+labels_int = np.arange(output_classes).tolist()
+labels = [f"{i}" for i in labels_int] # Tokens to be fed into greedy decoder
+greedy_decoder = GreedyCTCDecoder(labels=labels)
+
+
+dataset_path = r"C:\Users\Parv\Doc\HelixWorks\Basecalling\code\datasets\synthetic\synth_dataset_short_base_level.pkl"
 
 # Currently at motif level
 X, y = load_training_data(dataset_path=dataset_path, sample=False)
-
 
 X = data_preproc(X, window_size=length_per_sample, step_size=step_sequence)
 
@@ -114,7 +123,6 @@ if training_flag:
                 print(e)
                 with open(file_write_path, 'a') as f:
                     f.write(f"\nException ={e}")
-                    print(target_sequence)
                     continue
                
 
@@ -128,7 +136,7 @@ if training_flag:
 
                 print(f"Motifs identified {motifs_identifed}")
                 print(motif_err)
-                print(loss)
+                print(loss.item())
 
 
                 with open(file_write_path, 'a') as f:
@@ -137,6 +145,7 @@ if training_flag:
                     f.write(f"Actual Transcript: {actual_transcript}\n")
                     f.write(f"Sequence edit distance: {motif_err}\n")
                     f.write(f"Motifs Identified: {motifs_identifed}\n")
+                    f.write(f"Loss {loss.item()}")
                 
 
                 
@@ -178,7 +187,7 @@ if training_flag:
                 actual_transcript = get_actual_transcript(target_sequence)
                 #actual_transcript = get_actual_transcript(payload_sequence)
                 motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
-                motifs_identified = get_bases_identified(actual_transcript, greedy_transcript)
+                motifs_identified = get_motifs_identified(actual_transcript, greedy_transcript)
                 val_acc.append(motif_err)
                 motifs_identified_arr.append(motifs_identified)
                 
@@ -204,10 +213,7 @@ with torch.no_grad():
 
         test_sequence, target_sequence = torch.tensor(X_test[i]).to(device), torch.tensor(y_test[i]).to(device)
 
-        try:
-            model_output_timestep = model(test_sequence) # Getting model output
-        except:
-            continue
+        model_output_timestep = model(test_sequence) # Getting model output
 
         input_lengths = torch.tensor(X_test[i].shape[0])
         target_lengths = torch.tensor(len(target_sequence))
@@ -224,7 +230,7 @@ with torch.no_grad():
         motif_err = torchaudio.functional.edit_distance(actual_transcript, greedy_transcript) / len(actual_transcript)
         distances_arr.append(motif_err)
 
-        motifs_identifed = get_bases_identified(actual_transcript, greedy_transcript)
+        motifs_identifed = get_motifs_identified(actual_transcript, greedy_transcript)
         motifs_identifed_arr.append(motifs_identifed)
 
 test_loss /= len(X_test)

@@ -18,7 +18,7 @@ def load_training_data(
     dataset = pd.read_pickle(dataset_path)
 
     if sample:
-        dataset = dataset.sample(frac=0.1, random_state=1)
+        dataset = dataset.sample(frac=0.01, random_state=1)
     
     X = dataset[column_x].to_numpy().tolist()
     y = dataset[column_y].to_numpy()
@@ -46,6 +46,8 @@ def data_preproc(X, window_size=150, step_size=100):
         # Calculate start indices for all windows
         start_indices = range(0, sequence_length - window_size + 1, step_size)
         windows = [j[start:start + window_size] for start in start_indices]
+
+        windows = np.array(windows)
 
         # Convert to a PyTorch tensor in one step
         sequences = torch.tensor(windows, dtype=torch.float32).unsqueeze(1)

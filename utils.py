@@ -221,3 +221,7 @@ def get_metrics_for_evaluation(
         return greedy_transcript, actual_transcript, payload_transcript, target_metrics, payload_metrics
     
     return greedy_transcript, actual_transcript, target_metrics
+
+
+def get_bases_identified(target_seq, decoded_seq):
+    return sum([i==j for i, j in zip(target_seq, decoded_seq)])/len(target_seq)
