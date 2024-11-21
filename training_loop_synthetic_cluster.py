@@ -40,7 +40,7 @@ save_model = True
 alpha = 0
 n_classes = output_classes
 step_sequence = 5
-length_per_sample = 50
+length_per_sample = 15
 
 """
 #Motif level - comment out as needed
