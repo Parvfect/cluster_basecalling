@@ -40,7 +40,7 @@ save_model = True
 alpha = 0
 n_classes = output_classes
 step_sequence = 5
-length_per_sample = 15
+length_per_sample = 20
 
 """
 #Motif level - comment out as needed
@@ -60,7 +60,7 @@ model = CNN_BiGRU_Classifier(input_size, hidden_size, num_layers, output_size, d
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 ctc_loss = nn.CTCLoss(blank=0, reduction='mean', zero_infinity=True)
 
-epochs = 100
+epochs = 30
 model_output_split_size = 1
 
 dataset_path = os.path.join(os.environ['HOME'], "chopped_synthetic_base_level.pkl")
