@@ -31,8 +31,8 @@ display_iterations = 5000
 output_classes = 5 # including blank
 # Model Parameters
 input_size = 1  # Number of input channels
-hidden_size = 128
-num_layers = 3
+hidden_size = 256
+num_layers = 4
 output_size = output_classes  # Number of output classes
 dropout_rate = 0.2
 saved_model = False
@@ -63,7 +63,7 @@ ctc_loss = nn.CTCLoss(blank=0, reduction='mean', zero_infinity=True)
 epochs = 100
 model_output_split_size = 1
 
-dataset_path = os.path.join(os.environ['HOME'], "synth_dataset_short_base_level.pkl")
+dataset_path = os.path.join(os.environ['HOME'], "chopped_synthetic_base_level.pkl")
 
 
 # Currently at motif level
