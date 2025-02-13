@@ -22,7 +22,6 @@ def load_training_data(
     
     X = dataset[column_x].to_numpy().tolist()
     y = dataset[column_y].to_numpy()
-    
 
     if payload:
         payload = dataset['Payload_Sequence'].to_numpy()
@@ -31,7 +30,7 @@ def load_training_data(
     return X, y
        
 
-def data_preproc(X, window_size=150, step_size=100):
+def data_preproc(X, window_size=150, step_size=100, normalize_values=False):
     """
     Splits each long read of the dataset into n windows determined by the window and step size. 
     """
@@ -40,8 +39,12 @@ def data_preproc(X, window_size=150, step_size=100):
 
     for seq in tqdm(X):
         # Normalize and flatten sequence
-        #j = normalize([seq]).flatten()  # Consider vectorized normalization
-        j = seq
+
+        if normalize_values:
+            j = normalize([seq]).flatten() # Consider vectorized normalization
+        else:
+            j = seq
+
         sequence_length = len(j)
         # Calculate start indices for all windows
         start_indices = range(0, sequence_length - window_size + 1, step_size)
@@ -54,3 +57,14 @@ def data_preproc(X, window_size=150, step_size=100):
         sequences_dataset.append(sequences)
 
     return sequences_dataset
+
+def create_label_for_training(y):
+    """
+    Converts string motif sequence to a list of integer values for CTC Loss
+    """
+    label = []
+
+    for y_ in y:
+        label.append([int(i)+1 for i in y_])
+
+    return label
